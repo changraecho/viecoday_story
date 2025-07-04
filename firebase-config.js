@@ -2,14 +2,13 @@
 // Firebase Console에서 복사한 설정 정보를 여기에 붙여넣으세요
 
 const firebaseConfig = {
-  // TODO: Firebase Console에서 복사한 설정을 여기에 붙여넣기
-  // 예시:
-  // apiKey: "your-api-key",
-  // authDomain: "viecoday-story.firebaseapp.com",
-  // projectId: "viecoday-story",
-  // storageBucket: "viecoday-story.appspot.com",
-  // messagingSenderId: "123456789",
-  // appId: "your-app-id"
+  apiKey: "AIzaSyDkizkARVKF2K8cYoDsmp90t9fAYnBteMc",
+  authDomain: "viecoday-story.firebaseapp.com",
+  projectId: "viecoday-story",
+  storageBucket: "viecoday-story.firebasestorage.app",
+  messagingSenderId: "34135324273",
+  appId: "1:34135324273:web:b4769983ef770c8c9b4dd0",
+  measurementId: "G-0TSSCC89DB"
 };
 
 // Firebase 초기화

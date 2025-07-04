@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viecoday Story</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <main>
+            <section class="posts-container">
+                <div id="posts"></div>
+            </section>
+        </main>
+
+        <!-- 플로팅 버튼 -->
+        <div class="floating-btn" id="floatingBtn">
+            <span>+</span>
+        </div>
+    </div>
+
+    <!-- 글 작성 페이지 -->
+    <div id="writePage" class="page" style="display: none;">
+        <div class="page-header">
+            <button class="back-btn" id="backBtn">←</button>
+            <h2>새 글 작성</h2>
+            <button class="submit-btn" id="submitBtn">완료</button>
+        </div>
+        <div class="write-form">
+            <input type="text" id="postTitle" placeholder="제목을 입력하세요" required>
+            <textarea id="postContent" placeholder="내용을 입력하세요" required></textarea>
+        </div>
+    </div>
+
+    <!-- 글 상세 페이지 -->
+    <div id="detailPage" class="page" style="display: none;">
+        <div class="page-header">
+            <button class="back-btn" id="detailBackBtn">←</button>
+            <h2>글 상세</h2>
+            <button class="menu-btn">⋯</button>
+        </div>
+        <div class="detail-content">
+            <div class="post-detail" id="postDetail"></div>
+        </div>
+        <div class="comment-section-fixed">
+            <div class="post-actions-bar">
+                <button class="action-btn" id="detailLikeBtn">
+                    <span class="icon">♡</span>
+                    <span class="count">0</span>
+                </button>
+                <button class="action-btn" id="detailCommentBtn">
+                    <span class="icon">💬</span>
+                    <span class="count">0</span>
+                </button>
+                <button class="action-btn" id="detailShareBtn">
+                    <span class="icon">📤</span>
+                    <span>공유하기</span>
+                </button>
+            </div>
+            <div class="comments-list" id="detailCommentsList"></div>
+            <div class="comment-input-area">
+                <input type="text" id="commentInput" placeholder="댓글을 남겨보세요...">
+                <button id="commentSubmitBtn">게시</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 공유 모달 -->
+    <div id="shareModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h3>공유하기</h3>
+            <div class="share-buttons">
+                <button onclick="shareToFacebook()">Facebook</button>
+                <button onclick="shareToTwitter()">Twitter</button>
+                <button onclick="copyLink()">링크 복사</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // 페이지 초기 상태 설정
+        let currentPage = 'home';
+        let currentPostId = null;
+    </script>
+</body>
+</html>

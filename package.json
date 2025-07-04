@@ -1,0 +1,40 @@
+{
+  "name": "viecoday-story",
+  "version": "1.0.0",
+  "description": "작은 커뮤니티 서비스 - 글 작성, 좋아요, 댓글 기능을 제공하는 웹 애플리케이션",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx live-server .",
+    "build": "echo 'No build step required for static site'",
+    "deploy": "vercel --prod"
+  },
+  "keywords": [
+    "community",
+    "social",
+    "blog",
+    "comments",
+    "likes",
+    "web-app",
+    "javascript",
+    "html",
+    "css"
+  ],
+  "author": "Viecoday Team",
+  "license": "MIT",
+  "homepage": "https://github.com/viecoday/viecoday-story",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/viecoday/viecoday-story.git"
+  },
+  "bugs": {
+    "url": "https://github.com/viecoday/viecoday-story/issues"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2",
+    "serve": "^14.2.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

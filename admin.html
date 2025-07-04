@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Viecoday Story - 관리자 페이지</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <!-- 로그인 화면 -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container">
+            <h1>Viecoday Story</h1>
+            <h2>관리자 페이지</h2>
+            <div class="login-form">
+                <input type="password" id="passwordInput" placeholder="비밀번호를 입력하세요" />
+                <button id="loginBtn">로그인</button>
+            </div>
+            <div id="loginError" class="error-message" style="display: none;">
+                비밀번호가 올바르지 않습니다.
+            </div>
+        </div>
+    </div>
+
+    <!-- 관리자 대시보드 -->
+    <div id="adminDashboard" class="admin-dashboard" style="display: none;">
+        <header class="admin-header">
+            <div class="header-content">
+                <h1>Viecoday Story 관리자</h1>
+                <div class="header-actions">
+                    <span class="stats">총 <span id="totalPosts">0</span>개의 글</span>
+                    <button id="logoutBtn" class="logout-btn">로그아웃</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="admin-main">
+            <div class="admin-controls">
+                <div class="control-group">
+                    <button id="deleteSelectedBtn" class="control-btn danger">선택 삭제</button>
+                </div>
+                <div class="search-group">
+                    <input type="text" id="searchInput" placeholder="제목이나 내용으로 검색..." />
+                    <button id="searchBtn" class="control-btn">검색</button>
+                </div>
+            </div>
+
+            <div class="posts-table-container">
+                <table class="posts-table">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-col">
+                                <input type="checkbox" id="headerCheckbox" />
+                            </th>
+                            <th class="id-col">ID</th>
+                            <th class="author-col">작성자</th>
+                            <th class="title-col">제목</th>
+                            <th class="content-col">내용</th>
+                            <th class="date-col">작성일</th>
+                            <th class="stats-col">통계</th>
+                            <th class="actions-col">작업</th>
+                        </tr>
+                    </thead>
+                    <tbody id="postsTableBody">
+                        <!-- 동적으로 생성됨 -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination-container">
+                <div class="pagination-info">
+                    <span id="paginationInfo">1-50 / 총 0개</span>
+                </div>
+                <div class="pagination-controls">
+                    <button id="prevPageBtn" class="pagination-btn">이전</button>
+                    <div id="pageNumbers" class="page-numbers">
+                        <!-- 동적으로 생성됨 -->
+                    </div>
+                    <button id="nextPageBtn" class="pagination-btn">다음</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 글 상세 보기 모달 -->
+    <div id="postDetailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>글 상세 보기</h3>
+                <span class="close" id="closeDetailModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="post-detail-content">
+                    <div class="detail-row">
+                        <label>ID:</label>
+                        <span id="detailId"></span>
+                    </div>
+                    <div class="detail-row">
+                        <label>작성자:</label>
+                        <span id="detailAuthor"></span>
+                    </div>
+                    <div class="detail-row">
+                        <label>제목:</label>
+                        <span id="detailTitle"></span>
+                    </div>
+                    <div class="detail-row">
+                        <label>내용:</label>
+                        <div id="detailContent"></div>
+                    </div>
+                    <div class="detail-row">
+                        <label>작성일:</label>
+                        <span id="detailDate"></span>
+                    </div>
+                    <div class="detail-row">
+                        <label>좋아요:</label>
+                        <span id="detailLikes"></span>
+                    </div>
+                    <div class="detail-row">
+                        <label>댓글:</label>
+                        <div id="detailComments"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="deletePostBtn" class="btn danger">삭제</button>
+                <button id="closeDetailBtn" class="btn">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 확인 모달 -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>확인</h3>
+            </div>
+            <div class="modal-body">
+                <p id="confirmMessage"></p>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmYes" class="btn danger">삭제</button>
+                <button id="confirmNo" class="btn">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>

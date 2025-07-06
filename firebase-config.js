@@ -25,12 +25,15 @@ import {
   query,
   onSnapshot 
 } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-analytics.js";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const analytics = getAnalytics(app);
 
 // 전역 변수로 내보내기
 window.db = db;
+window.analytics = analytics;
 window.firestore = {
   collection,
   addDoc,
@@ -41,4 +44,7 @@ window.firestore = {
   orderBy,
   query,
   onSnapshot
+};
+window.analyticsUtils = {
+  logEvent
 };

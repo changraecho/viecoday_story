@@ -15,6 +15,33 @@ class AdminPanel {
         this.loadPosts();
         this.bindEvents();
         this.checkLoginStatus();
+        this.initAnalytics();
+    }
+    
+    async initAnalytics() {
+        // Firebase Analytics 로드 대기
+        const waitForAnalytics = () => {
+            return new Promise((resolve) => {
+                const checkAnalytics = () => {
+                    if (window.analytics && window.analyticsUtils) {
+                        resolve();
+                    } else {
+                        setTimeout(checkAnalytics, 100);
+                    }
+                };
+                checkAnalytics();
+            });
+        };
+        
+        await waitForAnalytics();
+        
+        // 관리자 페이지 방문 로깅
+        if (this.isLoggedIn) {
+            window.analyticsUtils.logEvent(window.analytics, 'admin_page_view', {
+                page_title: 'Admin Dashboard',
+                page_location: window.location.href
+            });
+        }
     }
 
     loadPosts() {

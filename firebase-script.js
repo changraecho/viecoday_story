@@ -8,7 +8,7 @@ let currentPostId = null;
 function waitForFirebase() {
     return new Promise((resolve) => {
         const checkFirebase = () => {
-            if (window.db && window.firestore) {
+            if (window.db && window.firestore && window.analytics) {
                 resolve();
             } else {
                 setTimeout(checkFirebase, 100);
@@ -16,6 +16,13 @@ function waitForFirebase() {
         };
         checkFirebase();
     });
+}
+
+// Analytics 이벤트 로깅 함수
+function logAnalyticsEvent(eventName, parameters = {}) {
+    if (window.analytics && window.analyticsUtils) {
+        window.analyticsUtils.logEvent(window.analytics, eventName, parameters);
+    }
 }
 
 document.addEventListener('DOMContentLoaded', async function() {
@@ -71,6 +78,12 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
 
     loadPostsFromFirebase();
+    
+    // 페이지 방문 이벤트 로깅
+    logAnalyticsEvent('page_view', {
+        page_title: 'Viecoday Story Home',
+        page_location: window.location.href
+    });
 });
 
 function showHomePage() {
@@ -91,6 +104,12 @@ function showWritePage() {
     // 입력 필드 초기화
     document.getElementById('postTitle').value = '';
     document.getElementById('postContent').value = '';
+    
+    // 글 작성 페이지 진입 이벤트
+    logAnalyticsEvent('page_view', {
+        page_title: 'Write Post',
+        page_location: window.location.href + '#write'
+    });
 }
 
 function showDetailPage(postId) {
@@ -102,6 +121,14 @@ function showDetailPage(postId) {
     document.getElementById('floatingBtn').style.display = 'none';
     
     renderPostDetail(postId);
+    
+    // 글 상세 페이지 진입 이벤트
+    const post = posts.find(p => p.id === postId);
+    logAnalyticsEvent('select_content', {
+        content_type: 'post',
+        item_id: postId,
+        content_title: post ? post.title : 'Unknown'
+    });
 }
 
 async function createPost() {
@@ -130,6 +157,13 @@ async function createPost() {
             post
         );
         console.log('글이 저장되었습니다:', docRef.id);
+        
+        // 글 작성 이벤트 로깅
+        logAnalyticsEvent('post_create', {
+            content_type: 'post',
+            content_title: title,
+            content_length: content.length
+        });
         
         showHomePage();
         loadPostsFromFirebase(); // 새로고침
@@ -225,6 +259,14 @@ async function toggleLikeFromList(postId) {
                     liked: post.liked
                 }
             );
+            
+            // 좋아요 이벤트 로깅
+            logAnalyticsEvent('like_post', {
+                content_type: 'post',
+                item_id: postId,
+                action: post.liked ? 'like' : 'unlike'
+            });
+            
             renderPosts();
         } catch (error) {
             console.error('좋아요 업데이트 실패:', error);
@@ -354,6 +396,14 @@ async function addCommentToDetail() {
                 comments: post.comments
             }
         );
+        
+        // 댓글 작성 이벤트 로깅
+        logAnalyticsEvent('comment_create', {
+            content_type: 'comment',
+            post_id: currentPostId,
+            comment_length: commentContent.length
+        });
+        
         renderPosts();
         renderPostDetail(currentPostId);
     } catch (error) {

@@ -25,6 +25,30 @@ function logAnalyticsEvent(eventName, parameters = {}) {
     }
 }
 
+// 날짜 포맷팅 함수
+function formatPostDate(dateValue) {
+    try {
+        if (!dateValue) return '날짜 없음';
+        
+        // Firebase Timestamp인 경우
+        if (dateValue && dateValue.toDate) {
+            return dateValue.toDate().toLocaleString('ko-KR');
+        }
+        
+        // 문자열이나 다른 형태인 경우
+        const dateObj = new Date(dateValue);
+        if (!isNaN(dateObj.getTime())) {
+            return dateObj.toLocaleString('ko-KR');
+        }
+        
+        // 모든 변환이 실패한 경우
+        return dateValue.toString();
+    } catch (error) {
+        console.error('날짜 포맷 오류:', error, dateValue);
+        return '날짜 오류';
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async function() {
     // Firebase 로드 대기
     await waitForFirebase();
@@ -188,7 +212,7 @@ async function loadPostsFromFirebase() {
             posts.push({
                 id: doc.id,
                 ...data,
-                date: new Date(data.date).toLocaleString('ko-KR')
+                date: data.date // 원본 날짜 형식 유지
             });
         });
         
@@ -216,7 +240,7 @@ function renderPosts() {
                     </div>
                     <div class="author-info">
                         <div class="author-name">${post.author}</div>
-                        <div class="post-date">${post.date}</div>
+                        <div class="post-date">${formatPostDate(post.date)}</div>
                     </div>
                 </div>
             </div>
@@ -287,7 +311,7 @@ function renderPostDetail(postId) {
                 </div>
                 <div class="author-info">
                     <div class="author-name">${post.author}</div>
-                    <div class="post-date">${post.date}</div>
+                    <div class="post-date">${formatPostDate(post.date)}</div>
                 </div>
             </div>
         </div>
@@ -324,7 +348,7 @@ function renderDetailComments(comments) {
         <div class="comment">
             <div class="comment-header">
                 <span class="comment-author">익명</span>
-                <span class="comment-date">${comment.date}</span>
+                <span class="comment-date">${formatPostDate(comment.date)}</span>
             </div>
             <div class="comment-content">${comment.content}</div>
             <div class="comment-actions">
@@ -380,7 +404,7 @@ async function addCommentToDetail() {
         id: Date.now().toString(),
         postId: currentPostId,
         content: commentContent,
-        date: new Date().toLocaleString('ko-KR'),
+        date: new Date().toISOString(),
         likes: 0,
         liked: false
     };
@@ -451,7 +475,7 @@ function loadSamplePosts() {
             title: "Firebase 연결 중...",
             content: "Firebase 데이터베이스에 연결하는 중입니다. 잠시만 기다려주세요.",
             author: "시스템",
-            date: new Date().toLocaleString('ko-KR'),
+            date: new Date().toISOString(),
             likes: 0,
             liked: false,
             comments: []

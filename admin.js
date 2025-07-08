@@ -58,11 +58,40 @@ class AdminPanel {
                 
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
+                    let originalDate = data.date;
+                    let displayDate;
+                    
+                    // 날짜 형식 안전 처리
+                    try {
+                        if (originalDate && originalDate.toDate) {
+                            // Firebase Timestamp 객체인 경우
+                            const dateObj = originalDate.toDate();
+                            originalDate = dateObj.toISOString();
+                            displayDate = dateObj.toLocaleString('ko-KR');
+                        } else if (typeof originalDate === 'string') {
+                            // 문자열인 경우
+                            const dateObj = new Date(originalDate);
+                            if (!isNaN(dateObj.getTime())) {
+                                displayDate = dateObj.toLocaleString('ko-KR');
+                            } else {
+                                displayDate = originalDate; // 원본 그대로 표시
+                            }
+                        } else {
+                            // 기타 경우 현재 시간 사용
+                            originalDate = new Date().toISOString();
+                            displayDate = new Date().toLocaleString('ko-KR');
+                        }
+                    } catch (error) {
+                        console.error('날짜 변환 오류:', error, originalDate);
+                        originalDate = new Date().toISOString();
+                        displayDate = new Date().toLocaleString('ko-KR');
+                    }
+                    
                     this.posts.push({
                         id: doc.id,
                         ...data,
-                        date: data.date, // 원본 날짜 유지
-                        displayDate: new Date(data.date).toLocaleString('ko-KR') // 표시용 날짜 추가
+                        date: originalDate,
+                        displayDate: displayDate
                     });
                 });
                 
@@ -82,7 +111,17 @@ class AdminPanel {
                 // displayDate 필드 추가
                 this.posts.forEach(post => {
                     if (!post.displayDate) {
-                        post.displayDate = new Date(post.date).toLocaleString('ko-KR');
+                        try {
+                            const dateObj = new Date(post.date);
+                            if (!isNaN(dateObj.getTime())) {
+                                post.displayDate = dateObj.toLocaleString('ko-KR');
+                            } else {
+                                post.displayDate = post.date; // 원본 그대로 표시
+                            }
+                        } catch (error) {
+                            console.error('날짜 변환 오류:', error, post.date);
+                            post.displayDate = new Date().toLocaleString('ko-KR');
+                        }
                     }
                 });
             } else {
@@ -407,7 +446,7 @@ class AdminPanel {
                 <td class="content-col">
                     <div class="content-preview">${this.truncateText(post.content, 100)}</div>
                 </td>
-                <td class="date-col">${post.displayDate || new Date(post.date).toLocaleString('ko-KR')}</td>
+                <td class="date-col">${post.displayDate || this.formatDate(post.date)}</td>
                 <td class="stats-col">
                     <div class="stats-info">
                         <span>❤️ ${post.likes}</span>
@@ -446,7 +485,7 @@ class AdminPanel {
         document.getElementById('detailAuthor').textContent = post.author;
         document.getElementById('detailTitle').textContent = post.title;
         document.getElementById('detailContent').textContent = post.content;
-        document.getElementById('detailDate').textContent = post.displayDate || new Date(post.date).toLocaleString('ko-KR');
+        document.getElementById('detailDate').textContent = post.displayDate || this.formatDate(post.date);
         document.getElementById('detailLikes').textContent = post.likes;
 
         const commentsHtml = post.comments.length > 0 
@@ -581,6 +620,29 @@ class AdminPanel {
     truncateText(text, maxLength) {
         if (text.length <= maxLength) return text;
         return text.substring(0, maxLength) + '...';
+    }
+
+    formatDate(dateValue) {
+        try {
+            if (!dateValue) return '날짜 없음';
+            
+            // Firebase Timestamp인 경우
+            if (dateValue && dateValue.toDate) {
+                return dateValue.toDate().toLocaleString('ko-KR');
+            }
+            
+            // 문자열이나 다른 형태인 경우
+            const dateObj = new Date(dateValue);
+            if (!isNaN(dateObj.getTime())) {
+                return dateObj.toLocaleString('ko-KR');
+            }
+            
+            // 모든 변환이 실패한 경우
+            return dateValue.toString();
+        } catch (error) {
+            console.error('날짜 포맷 오류:', error, dateValue);
+            return '날짜 오류';
+        }
     }
 
     savePosts() {

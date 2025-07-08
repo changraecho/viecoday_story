@@ -435,7 +435,7 @@ class AdminPanel {
                 <td class="checkbox-col">
                     <input type="checkbox" id="checkbox-${post.id}" 
                            ${this.selectedPosts.has(post.id) ? 'checked' : ''}
-                           onchange="adminPanel.togglePostSelection(${post.id})">
+                           data-post-id="${post.id}">
                 </td>
                 <td class="id-col">${post.id}</td>
                 <td class="author-col">${post.author}</td>
@@ -452,19 +452,44 @@ class AdminPanel {
                 </td>
                 <td class="actions-col">
                     <div class="action-buttons">
-                        <button class="btn view" onclick="adminPanel.viewPost(${post.id})">보기</button>
-                        <button class="btn danger" onclick="adminPanel.deletePost(${post.id})">삭제</button>
+                        <button class="btn view" data-post-id="${post.id}" data-action="view">보기</button>
+                        <button class="btn danger" data-post-id="${post.id}" data-action="delete">삭제</button>
                     </div>
                 </td>
             </tr>
         `).join('');
 
         this.updateHeaderCheckbox();
+        this.bindTableEvents();
+    }
+
+    bindTableEvents() {
+        // 체크박스 이벤트
+        document.querySelectorAll('input[type="checkbox"][data-post-id]').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const postId = e.target.getAttribute('data-post-id');
+                this.togglePostSelection(postId);
+            });
+        });
+
+        // 액션 버튼 이벤트
+        document.querySelectorAll('button[data-action]').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const postId = e.target.getAttribute('data-post-id');
+                const action = e.target.getAttribute('data-action');
+                
+                if (action === 'view') {
+                    this.viewPost(postId);
+                } else if (action === 'delete') {
+                    this.deletePost(postId);
+                }
+            });
+        });
     }
 
     togglePostSelection(postId) {
         const checkbox = document.getElementById(`checkbox-${postId}`);
-        if (checkbox.checked) {
+        if (checkbox && checkbox.checked) {
             this.selectedPosts.add(postId);
         } else {
             this.selectedPosts.delete(postId);

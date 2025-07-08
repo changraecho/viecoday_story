@@ -558,8 +558,13 @@ class AdminPanel {
             console.log('Loading bot data...');
             setTimeout(() => {
                 this.updateBotStatus();
-                this.loadBotStats();
-                this.loadBotLogs();
+                // Firebase 권한 문제가 있을 수 있으므로 try-catch로 감싸기
+                try {
+                    this.loadBotStats();
+                    this.loadBotLogs();
+                } catch (error) {
+                    console.log('Firebase data loading skipped due to permissions');
+                }
             }, 100);
         }
     }
@@ -734,6 +739,12 @@ class AdminPanel {
             }
         } catch (error) {
             console.error('봇 통계 로드 실패:', error);
+            // Firebase 권한 문제 시 기본값 표시
+            const totalBotPostsElement = document.getElementById('totalBotPosts');
+            const todayBotPostsElement = document.getElementById('todayBotPosts');
+            
+            if (totalBotPostsElement) totalBotPostsElement.textContent = '권한 없음';
+            if (todayBotPostsElement) todayBotPostsElement.textContent = '권한 없음';
         }
     }
 
@@ -773,6 +784,11 @@ class AdminPanel {
             }
         } catch (error) {
             console.error('봇 로그 로드 실패:', error);
+            // Firebase 권한 문제 시 기본 메시지 표시
+            const logsList = document.getElementById('botLogsList');
+            if (logsList) {
+                logsList.innerHTML = '<div class="log-item"><span class="log-time">-</span><span class="log-message">Firebase 권한이 필요합니다.</span></div>';
+            }
         }
     }
 

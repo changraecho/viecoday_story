@@ -48,9 +48,15 @@ class ContentBot {
                     enabled: latestConfig.enabled || false
                 };
                 console.log('봇 설정 로드됨:', this.config);
+            } else {
+                // 설정이 없으면 기본 설정 생성
+                await this.saveBotConfig();
+                console.log('기본 봇 설정 생성됨');
             }
         } catch (error) {
             console.error('봇 설정 로드 실패:', error);
+            // 권한 문제일 경우 기본 설정 사용
+            console.log('기본 설정으로 봇 초기화');
         }
     }
 

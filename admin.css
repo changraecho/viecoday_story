@@ -596,11 +596,18 @@ body {
 
 /* 탭 컨텐츠 */
 .tab-content {
-    display: none;
+    display: none !important;
 }
 
 .tab-content.active {
-    display: block;
+    display: block !important;
+}
+
+/* 봇 탭 강제 표시 */
+#botTab.active {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
 }
 
 /* 봇 관리 스타일 */

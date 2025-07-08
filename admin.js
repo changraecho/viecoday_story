@@ -17,17 +17,27 @@ class AdminPanel {
     async init() {
         console.log('AdminPanel 초기화 시작...');
         
+        // 이벤트 바인딩
+        this.bindEvents();
+        
+        // 로그인 상태 먼저 확인 (비동기)
+        await this.checkLoginStatus();
+        
+        this.initAnalytics();
+        
+        console.log('AdminPanel 초기화 완료');
+    }
+
+    async initializeData() {
+        console.log('로그인된 사용자 - 데이터 초기화 시작');
+        
         // Firebase 초기화 대기
         await this.waitForFirebase();
         
         // Firebase 준비 완료 후 데이터 로드
         await this.loadPosts();
         
-        this.bindEvents();
-        this.checkLoginStatus();
-        this.initAnalytics();
-        
-        console.log('AdminPanel 초기화 완료');
+        console.log('데이터 초기화 완료');
     }
 
     // Firebase 초기화 대기 함수
@@ -215,34 +225,73 @@ class AdminPanel {
         });
     }
 
-    checkLoginStatus() {
+    async checkLoginStatus() {
         const isLoggedIn = sessionStorage.getItem('admin_logged_in');
-        if (isLoggedIn === 'true') {
-            this.showDashboard();
+        const loginTime = sessionStorage.getItem('admin_login_time');
+        
+        console.log('로그인 상태 확인:', isLoggedIn, '로그인 시간:', loginTime);
+        
+        if (isLoggedIn === 'true' && loginTime) {
+            // 세션 만료 확인 (24시간)
+            const currentTime = Date.now();
+            const sessionDuration = 24 * 60 * 60 * 1000; // 24시간
+            
+            if (currentTime - parseInt(loginTime) < sessionDuration) {
+                console.log('유효한 로그인 세션 발견, 대시보드 표시');
+                this.isLoggedIn = true;
+                this.showDashboard();
+                
+                // 로그인된 상태에서 데이터 초기화
+                await this.initializeData();
+            } else {
+                console.log('세션 만료, 로그아웃 처리');
+                this.handleLogout();
+            }
         } else {
+            console.log('로그인 필요, 로그인 화면 표시');
+            this.isLoggedIn = false;
             this.showLogin();
         }
     }
 
-    handleLogin() {
+    async handleLogin() {
         const password = document.getElementById('passwordInput').value;
         const errorElement = document.getElementById('loginError');
 
         if (password === 'viecoday12#$') {
+            console.log('로그인 성공, 세션 저장 및 데이터 초기화');
             sessionStorage.setItem('admin_logged_in', 'true');
+            sessionStorage.setItem('admin_login_time', Date.now().toString());
             this.isLoggedIn = true;
             this.showDashboard();
             errorElement.style.display = 'none';
+            
+            // 로그인 성공 후 데이터 초기화
+            await this.initializeData();
         } else {
+            console.log('로그인 실패');
             errorElement.style.display = 'block';
             document.getElementById('passwordInput').value = '';
         }
     }
 
     handleLogout() {
+        console.log('로그아웃 처리');
         sessionStorage.removeItem('admin_logged_in');
+        sessionStorage.removeItem('admin_login_time');
         this.isLoggedIn = false;
+        
+        // 데이터 초기화
+        this.posts = [];
+        this.filteredPosts = [];
+        this.selectedPosts.clear();
+        
         this.showLogin();
+        
+        // 페이지 새로고침으로 완전한 정리
+        setTimeout(() => {
+            window.location.reload();
+        }, 100);
     }
 
     showLogin() {

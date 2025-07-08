@@ -14,8 +14,10 @@ class AdminPanel {
     init() {
         this.loadPosts();
         this.bindEvents();
+        this.bindBotEvents();
         this.checkLoginStatus();
         this.initAnalytics();
+        this.initTabs();
     }
     
     async initAnalytics() {
@@ -490,6 +492,318 @@ class AdminPanel {
         if (window.posts) {
             window.posts = [...this.posts];
         }
+    }
+
+    // 탭 기능 초기화
+    initTabs() {
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const tabName = e.target.getAttribute('data-tab');
+                this.switchTab(tabName);
+            });
+        });
+    }
+
+    // 탭 전환
+    switchTab(tabName) {
+        // 모든 탭 버튼 비활성화
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        
+        // 모든 탭 컨텐츠 숨기기
+        document.querySelectorAll('.tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+
+        // 선택된 탭 활성화
+        document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+        document.getElementById(`${tabName}Tab`).classList.add('active');
+
+        // 봇 탭이 선택되면 봇 상태 업데이트
+        if (tabName === 'bot') {
+            this.updateBotStatus();
+            this.loadBotStats();
+            this.loadBotLogs();
+        }
+    }
+
+    // 봇 관련 이벤트 바인딩
+    bindBotEvents() {
+        // 봇 제어 버튼들
+        document.getElementById('startBotBtn').addEventListener('click', () => this.startBot());
+        document.getElementById('stopBotBtn').addEventListener('click', () => this.stopBot());
+        document.getElementById('generateNowBtn').addEventListener('click', () => this.generateNow());
+        
+        // 봇 설정 저장
+        document.getElementById('saveBotConfigBtn').addEventListener('click', () => this.saveBotConfig());
+        
+        // 로그 관리
+        document.getElementById('refreshLogsBtn').addEventListener('click', () => this.loadBotLogs());
+        document.getElementById('clearLogsBtn').addEventListener('click', () => this.clearBotLogs());
+    }
+
+    // 봇 시작
+    async startBot() {
+        try {
+            if (window.contentBot) {
+                const success = await window.contentBot.start();
+                if (success) {
+                    this.showNotification('봇이 시작되었습니다.', 'success');
+                    this.updateBotStatus();
+                } else {
+                    this.showNotification('봇이 이미 실행 중입니다.', 'info');
+                }
+            } else {
+                this.showNotification('봇 시스템을 찾을 수 없습니다.', 'error');
+            }
+        } catch (error) {
+            console.error('봇 시작 실패:', error);
+            this.showNotification('봇 시작에 실패했습니다.', 'error');
+        }
+    }
+
+    // 봇 중지
+    async stopBot() {
+        try {
+            if (window.contentBot) {
+                const success = await window.contentBot.stop();
+                if (success) {
+                    this.showNotification('봇이 중지되었습니다.', 'success');
+                    this.updateBotStatus();
+                } else {
+                    this.showNotification('봇이 실행 중이 아닙니다.', 'info');
+                }
+            } else {
+                this.showNotification('봇 시스템을 찾을 수 없습니다.', 'error');
+            }
+        } catch (error) {
+            console.error('봇 중지 실패:', error);
+            this.showNotification('봇 중지에 실패했습니다.', 'error');
+        }
+    }
+
+    // 즉시 컨텐츠 생성
+    async generateNow() {
+        try {
+            if (window.contentBot) {
+                await window.contentBot.generateManualContent();
+                this.showNotification('컨텐츠가 생성되었습니다.', 'success');
+                setTimeout(() => {
+                    this.loadPosts();
+                    this.loadBotStats();
+                }, 1000);
+            } else {
+                this.showNotification('봇 시스템을 찾을 수 없습니다.', 'error');
+            }
+        } catch (error) {
+            console.error('컨텐츠 생성 실패:', error);
+            this.showNotification('컨텐츠 생성에 실패했습니다.', 'error');
+        }
+    }
+
+    // 봇 설정 저장
+    async saveBotConfig() {
+        try {
+            const interval = parseInt(document.getElementById('botInterval').value) * 60 * 1000; // 분을 밀리초로 변환
+            const prompt = document.getElementById('botPrompt').value;
+
+            if (window.contentBot) {
+                window.contentBot.updateConfig({
+                    interval: interval,
+                    prompt: prompt
+                });
+                await window.contentBot.saveBotConfig();
+                this.showNotification('설정이 저장되었습니다.', 'success');
+            } else {
+                this.showNotification('봇 시스템을 찾을 수 없습니다.', 'error');
+            }
+        } catch (error) {
+            console.error('설정 저장 실패:', error);
+            this.showNotification('설정 저장에 실패했습니다.', 'error');
+        }
+    }
+
+    // 봇 상태 업데이트
+    updateBotStatus() {
+        if (window.contentBot) {
+            const status = window.contentBot.getStatus();
+            const statusElement = document.getElementById('botStatus');
+            
+            if (status.isRunning) {
+                statusElement.textContent = '실행 중';
+                statusElement.className = 'status-indicator running';
+                
+                // 다음 실행 시간 표시
+                if (status.nextExecution) {
+                    document.getElementById('nextExecution').textContent = 
+                        status.nextExecution.toLocaleTimeString('ko-KR');
+                }
+            } else {
+                statusElement.textContent = '중지됨';
+                statusElement.className = 'status-indicator';
+                document.getElementById('nextExecution').textContent = '-';
+            }
+
+            // 설정 폼에 현재 값 표시
+            document.getElementById('botInterval').value = status.config.interval / 60 / 1000; // 밀리초를 분으로 변환
+            document.getElementById('botPrompt').value = status.config.prompt;
+        }
+    }
+
+    // 봇 통계 로드
+    async loadBotStats() {
+        try {
+            // Firebase에서 봇이 생성한 글 수 조회
+            if (window.db && window.firestore) {
+                const q = window.firestore.query(
+                    window.firestore.collection(window.db, 'posts')
+                );
+                const querySnapshot = await window.firestore.getDocs(q);
+                
+                let totalBotPosts = 0;
+                let todayBotPosts = 0;
+                const today = new Date().toDateString();
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    if (data.isBot) {
+                        totalBotPosts++;
+                        const postDate = new Date(data.date).toDateString();
+                        if (postDate === today) {
+                            todayBotPosts++;
+                        }
+                    }
+                });
+
+                document.getElementById('totalBotPosts').textContent = totalBotPosts;
+                document.getElementById('todayBotPosts').textContent = todayBotPosts;
+            }
+        } catch (error) {
+            console.error('봇 통계 로드 실패:', error);
+        }
+    }
+
+    // 봇 로그 로드
+    async loadBotLogs() {
+        try {
+            if (window.db && window.firestore) {
+                const q = window.firestore.query(
+                    window.firestore.collection(window.db, 'bot_logs'),
+                    window.firestore.orderBy('timestamp', 'desc')
+                );
+                const querySnapshot = await window.firestore.getDocs(q);
+                
+                const logsList = document.getElementById('botLogsList');
+                logsList.innerHTML = '';
+
+                if (querySnapshot.empty) {
+                    logsList.innerHTML = '<div class="log-item"><span class="log-time">-</span><span class="log-message">활동 로그가 없습니다.</span></div>';
+                    return;
+                }
+
+                querySnapshot.forEach((doc) => {
+                    const log = doc.data();
+                    const logElement = document.createElement('div');
+                    logElement.className = 'log-item';
+                    
+                    const time = new Date(log.timestamp).toLocaleString('ko-KR');
+                    const message = this.formatLogMessage(log.action, log.data);
+                    
+                    logElement.innerHTML = `
+                        <span class="log-time">${time}</span>
+                        <span class="log-message">${message}</span>
+                    `;
+                    
+                    logsList.appendChild(logElement);
+                });
+            }
+        } catch (error) {
+            console.error('봇 로그 로드 실패:', error);
+        }
+    }
+
+    // 로그 메시지 포맷팅
+    formatLogMessage(action, data) {
+        switch (action) {
+            case 'bot_started':
+                return '봇이 시작되었습니다';
+            case 'bot_stopped':
+                return '봇이 중지되었습니다';
+            case 'content_generated':
+                return `컨텐츠 생성: "${data?.title || '제목 없음'}"`;
+            case 'content_generation_failed':
+                return '컨텐츠 생성 실패';
+            case 'content_generation_error':
+                return `컨텐츠 생성 오류: ${data?.error || '알 수 없는 오류'}`;
+            default:
+                return action;
+        }
+    }
+
+    // 봇 로그 삭제
+    async clearBotLogs() {
+        if (!confirm('모든 봇 로그를 삭제하시겠습니까?')) {
+            return;
+        }
+
+        try {
+            if (window.db && window.firestore) {
+                const q = window.firestore.query(
+                    window.firestore.collection(window.db, 'bot_logs')
+                );
+                const querySnapshot = await window.firestore.getDocs(q);
+                
+                const deletePromises = [];
+                querySnapshot.forEach((doc) => {
+                    deletePromises.push(window.firestore.deleteDoc(doc.ref));
+                });
+                
+                await Promise.all(deletePromises);
+                this.showNotification('로그가 삭제되었습니다.', 'success');
+                this.loadBotLogs();
+            }
+        } catch (error) {
+            console.error('로그 삭제 실패:', error);
+            this.showNotification('로그 삭제에 실패했습니다.', 'error');
+        }
+    }
+
+    // 알림 표시
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        notification.textContent = message;
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
+            color: white;
+            border-radius: 6px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 10000;
+            font-weight: 500;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // 애니메이션으로 표시
+        setTimeout(() => {
+            notification.style.transform = 'translateX(0)';
+        }, 100);
+        
+        // 3초 후 자동 제거
+        setTimeout(() => {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 3000);
     }
 }
 

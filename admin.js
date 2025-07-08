@@ -44,15 +44,46 @@ class AdminPanel {
         }
     }
 
-    loadPosts() {
-        // localStorage에서 posts 데이터 로드 (실제 환경에서는 API 호출)
-        const savedPosts = localStorage.getItem('viecoday_posts');
-        if (savedPosts) {
-            this.posts = JSON.parse(savedPosts);
-        } else {
-            // 샘플 데이터 생성
-            this.generateSampleData();
+    async loadPosts() {
+        try {
+            // Firebase에서 posts 데이터 로드 (최신 글부터)
+            if (window.db && window.firestore) {
+                const q = window.firestore.query(
+                    window.firestore.collection(window.db, 'posts'),
+                    window.firestore.orderBy('date', 'desc')
+                );
+                
+                const querySnapshot = await window.firestore.getDocs(q);
+                this.posts = [];
+                
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    this.posts.push({
+                        id: doc.id,
+                        ...data,
+                        date: new Date(data.date).toLocaleString('ko-KR')
+                    });
+                });
+                
+                console.log('Firebase에서 글 로드 완료:', this.posts.length, '개');
+            } else {
+                // Firebase가 없으면 샘플 데이터 생성
+                this.generateSampleData();
+            }
+        } catch (error) {
+            console.error('Firebase 글 로드 실패:', error);
+            // 실패 시 localStorage에서 로드 시도
+            const savedPosts = localStorage.getItem('viecoday_posts');
+            if (savedPosts) {
+                this.posts = JSON.parse(savedPosts);
+                // 날짜 기준 내림차순 정렬
+                this.posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+            } else {
+                // 샘플 데이터 생성
+                this.generateSampleData();
+            }
         }
+        
         this.filteredPosts = [...this.posts];
         this.updateDisplay();
     }
@@ -98,6 +129,9 @@ class AdminPanel {
                 comments: this.generateSampleComments(i)
             });
         }
+        
+        // 날짜 기준 내림차순 정렬 (최신 글부터)
+        samplePosts.sort((a, b) => new Date(b.date) - new Date(a.date));
         
         this.posts = samplePosts;
         localStorage.setItem('viecoday_posts', JSON.stringify(this.posts));
@@ -266,12 +300,37 @@ class AdminPanel {
             return;
         }
 
-        this.showConfirmModal(`선택한 ${this.selectedPosts.size}개의 글을 삭제하시겠습니까?`, () => {
-            this.posts = this.posts.filter(post => !this.selectedPosts.has(post.id));
-            this.selectedPosts.clear();
-            this.savePosts();
-            this.applyCurrentFilter();
-            this.updateDisplay();
+        this.showConfirmModal(`선택한 ${this.selectedPosts.size}개의 글을 삭제하시겠습니까?`, async () => {
+            try {
+                // Firebase에서 선택된 글들 삭제
+                if (window.db && window.firestore) {
+                    const deletePromises = [];
+                    this.selectedPosts.forEach(postId => {
+                        deletePromises.push(
+                            window.firestore.deleteDoc(
+                                window.firestore.doc(window.db, 'posts', postId)
+                            )
+                        );
+                    });
+                    
+                    await Promise.all(deletePromises);
+                    console.log('Firebase에서 글 삭제 완료');
+                    
+                    // 글 목록 다시 로드
+                    await this.loadPosts();
+                } else {
+                    // Firebase가 없으면 기존 방식
+                    this.posts = this.posts.filter(post => !this.selectedPosts.has(post.id));
+                    this.savePosts();
+                    this.applyCurrentFilter();
+                    this.updateDisplay();
+                }
+                
+                this.selectedPosts.clear();
+            } catch (error) {
+                console.error('글 삭제 실패:', error);
+                alert('글 삭제에 실패했습니다.');
+            }
         });
     }
 
@@ -392,12 +451,30 @@ class AdminPanel {
     }
 
     deletePost(postId) {
-        this.showConfirmModal('이 글을 삭제하시겠습니까?', () => {
-            this.posts = this.posts.filter(post => post.id !== postId);
-            this.selectedPosts.delete(postId);
-            this.savePosts();
-            this.applyCurrentFilter();
-            this.updateDisplay();
+        this.showConfirmModal('이 글을 삭제하시겠습니까?', async () => {
+            try {
+                // Firebase에서 글 삭제
+                if (window.db && window.firestore) {
+                    await window.firestore.deleteDoc(
+                        window.firestore.doc(window.db, 'posts', postId)
+                    );
+                    console.log('Firebase에서 글 삭제 완료');
+                    
+                    // 글 목록 다시 로드
+                    await this.loadPosts();
+                } else {
+                    // Firebase가 없으면 기존 방식
+                    this.posts = this.posts.filter(post => post.id !== postId);
+                    this.savePosts();
+                    this.applyCurrentFilter();
+                    this.updateDisplay();
+                }
+                
+                this.selectedPosts.delete(postId);
+            } catch (error) {
+                console.error('글 삭제 실패:', error);
+                alert('글 삭제에 실패했습니다.');
+            }
         });
     }
 

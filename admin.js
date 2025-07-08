@@ -500,31 +500,17 @@ class AdminPanel {
 
     // 탭 기능 초기화
     initTabs() {
-        console.log('Initializing tabs...');
         const tabBtns = document.querySelectorAll('.tab-btn');
-        console.log('Found tab buttons:', tabBtns.length);
-        
-        tabBtns.forEach((btn, index) => {
-            console.log(`Tab button ${index}:`, btn, 'data-tab:', btn.getAttribute('data-tab'));
+        tabBtns.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const tabName = e.target.getAttribute('data-tab');
-                console.log('Tab clicked:', tabName);
                 this.switchTab(tabName);
             });
-        });
-        
-        // 탭 컨텐츠 요소들도 확인
-        const tabContents = document.querySelectorAll('.tab-content');
-        console.log('Found tab contents:', tabContents.length);
-        tabContents.forEach((content, index) => {
-            console.log(`Tab content ${index}:`, content.id, content);
         });
     }
 
     // 탭 전환
     switchTab(tabName) {
-        console.log('Switching to tab:', tabName);
-        
         // 모든 탭 버튼 비활성화
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('active');
@@ -539,23 +525,16 @@ class AdminPanel {
         const selectedTabBtn = document.querySelector(`[data-tab="${tabName}"]`);
         const selectedTabContent = document.getElementById(`${tabName}Tab`);
         
-        console.log('Selected tab button:', selectedTabBtn);
-        console.log('Selected tab content:', selectedTabContent);
-        
         if (selectedTabBtn) {
             selectedTabBtn.classList.add('active');
         }
         
         if (selectedTabContent) {
             selectedTabContent.classList.add('active');
-            console.log('Tab content activated for:', tabName);
-        } else {
-            console.error('Tab content not found for:', `${tabName}Tab`);
         }
 
         // 봇 탭이 선택되면 봇 상태 업데이트
         if (tabName === 'bot') {
-            console.log('Loading bot data...');
             setTimeout(() => {
                 this.updateBotStatus();
                 // Firebase 권한 문제가 있을 수 있으므로 try-catch로 감싸기

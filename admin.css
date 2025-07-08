@@ -608,6 +608,28 @@ body {
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
+    background: #f0f0f0 !important;
+    border: 2px solid red !important;
+    min-height: 500px !important;
+}
+
+/* 봇 관리 디버깅 스타일 */
+#botTab {
+    background: #ffcccc !important;
+    border: 1px solid blue !important;
+}
+
+.bot-controls {
+    background: #ccffcc !important;
+    border: 1px solid green !important;
+    padding: 20px !important;
+}
+
+.bot-status-section {
+    background: #ffffcc !important;
+    border: 1px solid orange !important;
+    margin: 10px 0 !important;
+    padding: 15px !important;
 }
 
 /* 봇 관리 스타일 */

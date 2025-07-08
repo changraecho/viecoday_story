@@ -102,32 +102,8 @@ class AdminPanel {
             }
         } catch (error) {
             console.error('Firebase 글 로드 실패:', error);
-            // 실패 시 localStorage에서 로드 시도
-            const savedPosts = localStorage.getItem('viecoday_posts');
-            if (savedPosts) {
-                this.posts = JSON.parse(savedPosts);
-                // 날짜 기준 내림차순 정렬
-                this.posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-                // displayDate 필드 추가
-                this.posts.forEach(post => {
-                    if (!post.displayDate) {
-                        try {
-                            const dateObj = new Date(post.date);
-                            if (!isNaN(dateObj.getTime())) {
-                                post.displayDate = dateObj.toLocaleString('ko-KR');
-                            } else {
-                                post.displayDate = post.date; // 원본 그대로 표시
-                            }
-                        } catch (error) {
-                            console.error('날짜 변환 오류:', error, post.date);
-                            post.displayDate = new Date().toLocaleString('ko-KR');
-                        }
-                    }
-                });
-            } else {
-                // 샘플 데이터 생성
-                this.generateSampleData();
-            }
+            // Firebase 연결 실패 시 로딩 메시지 표시
+            this.generateSampleData();
         }
         
         this.filteredPosts = [...this.posts];
@@ -135,87 +111,20 @@ class AdminPanel {
     }
 
     generateSampleData() {
-        // 이미 샘플 데이터가 있으면 생성하지 않음
-        if (localStorage.getItem('viecoday_posts')) {
-            const savedPosts = JSON.parse(localStorage.getItem('viecoday_posts'));
-            this.posts = savedPosts;
-            this.posts.sort((a, b) => new Date(b.date) - new Date(a.date));
-            return;
-        }
-        
-        const samplePosts = [];
-        const categories = ['부동산', '셀소·미팅·모임', '썸·연애', '일상', '취미', '음식', '여행', '직장'];
-        const sampleTitles = [
-            '청산주공13단지 전세에 대한 의견 부탁드림',
-            '30대 남자입니다. 셀소해봅니다.',
-            '스물 후반 남자 솔로가 되었다,,,',
-            '오늘의 좋은 소식',
-            '주말에 뭐하고 지내세요?',
-            '맛있는 카페 추천해주세요',
-            '제주도 여행 계획 중입니다',
-            '직장에서 힘든 일이 있었어요'
-        ];
-        const sampleContents = [
-            '얼마전 서울직 전분하면서 세입자한테 애기하는 과정 관련해서 조언을 구했었는데 지금 방향 그 집 처분하고 싶어서 다시 연락하여 알려드리고자 합니다.',
-            '안녕하세요! 고민 많이하다가 올립니다. 저는 90년 초반 생이구요 을지로쪽 살고있습니다. 키 187 몸무게 80키로대 입니다.',
-            '스물 후반에 솔로가 되니까 아니 언제를 하려면 무조건 소개팅 나가야 하네,,, 혼자 있는 시간이 많아서 외로워요.',
-            '오늘 날씨가 정말 좋네요! 산책하면서 좋은 하루 보내세요. 다들 행복한 하루 되시길 바랍니다.',
-            '요즘 할 일이 없어서 심심해요. 다들 주말에 뭐하고 지내시나요? 좋은 활동 추천해주세요!',
-            '홍대 근처에 분위기 좋은 카페 있으면 추천해주세요. 친구들과 만나서 수다떨기 좋은 곳으로요.',
-            '다음주에 제주도 3박 4일로 여행 가는데 꼭 가봐야 할 곳이나 맛집 추천해주세요!',
-            '회사에서 상사가 너무 스트레스를 줘서 힘들어요. 비슷한 경험 있으신 분들 조언 부탁드려요.'
-        ];
-
-        for (let i = 1; i <= 127; i++) {
-            const randomCategory = categories[Math.floor(Math.random() * categories.length)];
-            const randomTitle = sampleTitles[Math.floor(Math.random() * sampleTitles.length)];
-            const randomContent = sampleContents[Math.floor(Math.random() * sampleContents.length)];
-            const randomDate = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000);
-            
-            samplePosts.push({
-                id: i,
-                title: randomTitle + (i > 8 ? ` (${i})` : ''),
-                content: randomContent,
-                author: randomCategory,
-                date: randomDate.toISOString(), // ISO 문자열로 저장
-                displayDate: randomDate.toLocaleString('ko-KR'), // 표시용 날짜
-                likes: Math.floor(Math.random() * 50),
-                liked: false,
-                comments: this.generateSampleComments(i)
-            });
-        }
-        
-        // 날짜 기준 내림차순 정렬 (최신 글부터)
-        samplePosts.sort((a, b) => new Date(b.date) - new Date(a.date));
-        
-        this.posts = samplePosts;
-        localStorage.setItem('viecoday_posts', JSON.stringify(this.posts));
+        // Firebase 사용 시 기본 로딩 메시지만 표시
+        this.posts = [{
+            id: 'loading',
+            title: "데이터 로딩 중...",
+            content: "Firebase에서 데이터를 불러오는 중입니다.",
+            author: "시스템",
+            date: new Date().toISOString(),
+            displayDate: new Date().toLocaleString('ko-KR'),
+            likes: 0,
+            liked: false,
+            comments: []
+        }];
     }
 
-    generateSampleComments(postId) {
-        const comments = [];
-        const commentCount = Math.floor(Math.random() * 5);
-        const sampleComments = [
-            '좋은 정보 감사합니다!',
-            '저도 비슷한 경험이 있어요.',
-            '도움이 많이 되었습니다.',
-            '공감합니다.',
-            '좋은 하루 보내세요!'
-        ];
-
-        for (let i = 0; i < commentCount; i++) {
-            comments.push({
-                id: Date.now() + i,
-                postId: postId,
-                content: sampleComments[Math.floor(Math.random() * sampleComments.length)],
-                date: new Date().toLocaleString('ko-KR'),
-                likes: Math.floor(Math.random() * 10),
-                liked: false
-            });
-        }
-
-        return comments;
-    }
 
     bindEvents() {
         // 로그인 관련
@@ -374,11 +283,8 @@ class AdminPanel {
                     // 글 목록 다시 로드
                     await this.loadPosts();
                 } else {
-                    // Firebase가 없으면 기존 방식
-                    this.posts = this.posts.filter(post => !this.selectedPosts.has(post.id));
-                    this.savePosts();
-                    this.applyCurrentFilter();
-                    this.updateDisplay();
+                    // Firebase가 없으면 기존 방식 (현재는 Firebase 필수이므로 이 코드는 사용되지 않음)
+                    console.log('Firebase가 필요합니다.');
                 }
                 
                 this.selectedPosts.clear();
@@ -518,11 +424,8 @@ class AdminPanel {
                     // 글 목록 다시 로드
                     await this.loadPosts();
                 } else {
-                    // Firebase가 없으면 기존 방식
-                    this.posts = this.posts.filter(post => post.id !== postId);
-                    this.savePosts();
-                    this.applyCurrentFilter();
-                    this.updateDisplay();
+                    // Firebase가 없으면 기존 방식 (현재는 Firebase 필수이므로 이 코드는 사용되지 않음)
+                    console.log('Firebase가 필요합니다.');
                 }
                 
                 this.selectedPosts.delete(postId);
@@ -645,13 +548,6 @@ class AdminPanel {
         }
     }
 
-    savePosts() {
-        localStorage.setItem('viecoday_posts', JSON.stringify(this.posts));
-        // 메인 페이지에서도 사용할 수 있도록 동기화
-        if (window.posts) {
-            window.posts = [...this.posts];
-        }
-    }
 
     // 탭 기능 초기화
     initTabs() {

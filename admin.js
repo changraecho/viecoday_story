@@ -8,14 +8,47 @@ class AdminPanel {
         this.isLoggedIn = false;
         this.currentPostDetail = null;
         
-        this.init();
+        // 비동기 초기화
+        this.init().catch(error => {
+            console.error('AdminPanel 초기화 실패:', error);
+        });
     }
 
-    init() {
-        this.loadPosts();
+    async init() {
+        console.log('AdminPanel 초기화 시작...');
+        
+        // Firebase 초기화 대기
+        await this.waitForFirebase();
+        
+        // Firebase 준비 완료 후 데이터 로드
+        await this.loadPosts();
+        
         this.bindEvents();
         this.checkLoginStatus();
         this.initAnalytics();
+        
+        console.log('AdminPanel 초기화 완료');
+    }
+
+    // Firebase 초기화 대기 함수
+    waitForFirebase() {
+        return new Promise((resolve) => {
+            const checkFirebase = () => {
+                console.log('Firebase 상태 확인:', {
+                    db: !!window.db,
+                    firestore: !!window.firestore
+                });
+                
+                if (window.db && window.firestore) {
+                    console.log('Firebase 초기화 완료, 데이터 로드 시작');
+                    resolve();
+                } else {
+                    console.log('Firebase 초기화 대기 중...');
+                    setTimeout(checkFirebase, 100);
+                }
+            };
+            checkFirebase();
+        });
     }
     
     async initAnalytics() {
@@ -119,11 +152,12 @@ class AdminPanel {
     }
 
     generateSampleData() {
-        // Firebase 사용 시 기본 로딩 메시지만 표시
+        console.log('generateSampleData 호출됨 - Firebase 연결 실패 시 백업');
+        // Firebase 연결 실패 시에만 호출되는 백업 메시지
         this.posts = [{
             id: 'loading',
-            title: "데이터 로딩 중...",
-            content: "Firebase에서 데이터를 불러오는 중입니다.",
+            title: "Firebase 연결 중...",
+            content: "Firebase 데이터베이스 연결을 시도하고 있습니다. 잠시 후 새로고침해 주세요.",
             author: "시스템",
             date: new Date().toISOString(),
             displayDate: new Date().toLocaleString('ko-KR'),
@@ -920,5 +954,5 @@ class AdminPanel {
     }
 }
 
-// 전역 변수로 adminPanel 인스턴스 생성
-const adminPanel = new AdminPanel();
+// AdminPanel 클래스 정의 완료
+// 인스턴스는 admin.html에서 DOM 로드 후 생성됨

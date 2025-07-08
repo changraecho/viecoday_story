@@ -221,6 +221,18 @@
     <!-- Firebase SDK -->
     <script src="firebase-config.js" type="module"></script>
     <script src="content-bot.js"></script>
+    <script>
+        // DOM과 Firebase 로드 완료 후 AdminPanel 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM 로드 완료, AdminPanel 초기화 대기 중...');
+            
+            // 약간의 지연 후 AdminPanel 초기화 (Firebase 모듈 로드 시간 고려)
+            setTimeout(() => {
+                console.log('AdminPanel 인스턴스 생성 시작');
+                window.adminPanel = new AdminPanel();
+            }, 500);
+        });
+    </script>
     <script src="admin.js"></script>
 </body>
 </html>

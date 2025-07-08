@@ -14,10 +14,8 @@ class AdminPanel {
     init() {
         this.loadPosts();
         this.bindEvents();
-        this.bindBotEvents();
         this.checkLoginStatus();
         this.initAnalytics();
-        this.initTabs();
     }
     
     async initAnalytics() {
@@ -217,6 +215,12 @@ class AdminPanel {
         document.getElementById('loginScreen').style.display = 'none';
         document.getElementById('adminDashboard').style.display = 'block';
         this.updateDisplay();
+        
+        // 대시보드가 로드된 후 탭과 봇 기능 초기화
+        setTimeout(() => {
+            this.initTabs();
+            this.bindBotEvents();
+        }, 100);
     }
 
     selectAllCurrentPage() {
@@ -531,17 +535,20 @@ class AdminPanel {
 
     // 봇 관련 이벤트 바인딩
     bindBotEvents() {
-        // 봇 제어 버튼들
-        document.getElementById('startBotBtn').addEventListener('click', () => this.startBot());
-        document.getElementById('stopBotBtn').addEventListener('click', () => this.stopBot());
-        document.getElementById('generateNowBtn').addEventListener('click', () => this.generateNow());
-        
-        // 봇 설정 저장
-        document.getElementById('saveBotConfigBtn').addEventListener('click', () => this.saveBotConfig());
-        
-        // 로그 관리
-        document.getElementById('refreshLogsBtn').addEventListener('click', () => this.loadBotLogs());
-        document.getElementById('clearLogsBtn').addEventListener('click', () => this.clearBotLogs());
+        // DOM 요소 존재 확인 후 이벤트 바인딩
+        const startBotBtn = document.getElementById('startBotBtn');
+        const stopBotBtn = document.getElementById('stopBotBtn');
+        const generateNowBtn = document.getElementById('generateNowBtn');
+        const saveBotConfigBtn = document.getElementById('saveBotConfigBtn');
+        const refreshLogsBtn = document.getElementById('refreshLogsBtn');
+        const clearLogsBtn = document.getElementById('clearLogsBtn');
+
+        if (startBotBtn) startBotBtn.addEventListener('click', () => this.startBot());
+        if (stopBotBtn) stopBotBtn.addEventListener('click', () => this.stopBot());
+        if (generateNowBtn) generateNowBtn.addEventListener('click', () => this.generateNow());
+        if (saveBotConfigBtn) saveBotConfigBtn.addEventListener('click', () => this.saveBotConfig());
+        if (refreshLogsBtn) refreshLogsBtn.addEventListener('click', () => this.loadBotLogs());
+        if (clearLogsBtn) clearLogsBtn.addEventListener('click', () => this.clearBotLogs());
     }
 
     // 봇 시작
@@ -630,25 +637,36 @@ class AdminPanel {
         if (window.contentBot) {
             const status = window.contentBot.getStatus();
             const statusElement = document.getElementById('botStatus');
+            const nextExecutionElement = document.getElementById('nextExecution');
+            const botIntervalElement = document.getElementById('botInterval');
+            const botPromptElement = document.getElementById('botPrompt');
             
-            if (status.isRunning) {
-                statusElement.textContent = '실행 중';
-                statusElement.className = 'status-indicator running';
-                
-                // 다음 실행 시간 표시
-                if (status.nextExecution) {
-                    document.getElementById('nextExecution').textContent = 
-                        status.nextExecution.toLocaleTimeString('ko-KR');
+            if (statusElement) {
+                if (status.isRunning) {
+                    statusElement.textContent = '실행 중';
+                    statusElement.className = 'status-indicator running';
+                    
+                    // 다음 실행 시간 표시
+                    if (status.nextExecution && nextExecutionElement) {
+                        nextExecutionElement.textContent = 
+                            status.nextExecution.toLocaleTimeString('ko-KR');
+                    }
+                } else {
+                    statusElement.textContent = '중지됨';
+                    statusElement.className = 'status-indicator';
+                    if (nextExecutionElement) {
+                        nextExecutionElement.textContent = '-';
+                    }
                 }
-            } else {
-                statusElement.textContent = '중지됨';
-                statusElement.className = 'status-indicator';
-                document.getElementById('nextExecution').textContent = '-';
             }
 
             // 설정 폼에 현재 값 표시
-            document.getElementById('botInterval').value = status.config.interval / 60 / 1000; // 밀리초를 분으로 변환
-            document.getElementById('botPrompt').value = status.config.prompt;
+            if (botIntervalElement) {
+                botIntervalElement.value = status.config.interval / 60 / 1000; // 밀리초를 분으로 변환
+            }
+            if (botPromptElement) {
+                botPromptElement.value = status.config.prompt;
+            }
         }
     }
 
@@ -677,8 +695,11 @@ class AdminPanel {
                     }
                 });
 
-                document.getElementById('totalBotPosts').textContent = totalBotPosts;
-                document.getElementById('todayBotPosts').textContent = todayBotPosts;
+                const totalBotPostsElement = document.getElementById('totalBotPosts');
+                const todayBotPostsElement = document.getElementById('todayBotPosts');
+                
+                if (totalBotPostsElement) totalBotPostsElement.textContent = totalBotPosts;
+                if (todayBotPostsElement) todayBotPostsElement.textContent = todayBotPosts;
             }
         } catch (error) {
             console.error('봇 통계 로드 실패:', error);

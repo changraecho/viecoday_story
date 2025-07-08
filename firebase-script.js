@@ -199,16 +199,18 @@ async function createPost() {
 
 async function loadPostsFromFirebase() {
     try {
-        const q = window.firestore.query(
-            window.firestore.collection(window.db, 'posts'),
-            window.firestore.orderBy('date', 'desc')
-        );
+        console.log('Firebase에서 posts 로드 시작...');
         
-        const querySnapshot = await window.firestore.getDocs(q);
+        // orderBy 없이 모든 문서를 가져온 후 클라이언트에서 정렬
+        const postsRef = window.firestore.collection(window.db, 'posts');
+        const querySnapshot = await window.firestore.getDocs(postsRef);
+        
+        console.log('Firebase 쿼리 완료. 문서 개수:', querySnapshot.size);
         posts = [];
         
         querySnapshot.forEach((doc) => {
             const data = doc.data();
+            console.log('로드된 문서 ID:', doc.id, '제목:', data.title);
             posts.push({
                 id: doc.id,
                 ...data,
@@ -216,9 +218,14 @@ async function loadPostsFromFirebase() {
             });
         });
         
+        // 클라이언트에서 날짜순 정렬 (최신 글부터)
+        posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        console.log('메인 페이지 posts 로드 완료:', posts.length, '개');
         renderPosts();
     } catch (error) {
         console.error('데이터 로드 실패:', error);
+        console.error('에러 상세:', error.code, error.message);
         // 실패 시 샘플 데이터 로드
         loadSamplePosts();
     }

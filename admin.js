@@ -46,20 +46,23 @@ class AdminPanel {
 
     async loadPosts() {
         try {
-            // Firebase에서 posts 데이터 로드 (최신 글부터)
+            // Firebase에서 posts 데이터 로드
             if (window.db && window.firestore) {
-                const q = window.firestore.query(
-                    window.firestore.collection(window.db, 'posts'),
-                    window.firestore.orderBy('date', 'desc')
-                );
+                console.log('Firebase에서 posts 컬렉션 로드 시작...');
                 
-                const querySnapshot = await window.firestore.getDocs(q);
+                // 먼저 orderBy 없이 모든 문서를 가져온 후 클라이언트에서 정렬
+                const postsRef = window.firestore.collection(window.db, 'posts');
+                const querySnapshot = await window.firestore.getDocs(postsRef);
+                
+                console.log('Firebase 쿼리 완료. 문서 개수:', querySnapshot.size);
                 this.posts = [];
                 
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
                     let originalDate = data.date;
                     let displayDate;
+                    
+                    console.log('로드된 문서 ID:', doc.id, '제목:', data.title);
                     
                     // 날짜 형식 안전 처리
                     try {
@@ -95,13 +98,18 @@ class AdminPanel {
                     });
                 });
                 
+                // 클라이언트에서 날짜순 정렬 (최신 글부터)
+                this.posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+                
                 console.log('Firebase에서 글 로드 완료:', this.posts.length, '개');
+                console.log('로드된 글 목록:', this.posts.map(p => ({id: p.id, title: p.title, date: p.date})));
             } else {
-                // Firebase가 없으면 샘플 데이터 생성
+                console.log('Firebase가 초기화되지 않음. 샘플 데이터 생성.');
                 this.generateSampleData();
             }
         } catch (error) {
             console.error('Firebase 글 로드 실패:', error);
+            console.error('에러 상세:', error.code, error.message);
             // Firebase 연결 실패 시 로딩 메시지 표시
             this.generateSampleData();
         }
@@ -660,14 +668,21 @@ class AdminPanel {
     // 즉시 컨텐츠 생성
     async generateNow() {
         try {
+            console.log('즉시 생성 버튼 클릭됨');
             if (window.contentBot) {
+                console.log('봇 시스템 발견, 컨텐츠 생성 시작...');
                 await window.contentBot.generateManualContent();
                 this.showNotification('컨텐츠가 생성되었습니다.', 'success');
-                setTimeout(() => {
-                    this.loadPosts();
-                    this.loadBotStats();
-                }, 1000);
+                
+                // 즉시 글 목록 새로고침
+                console.log('컨텐츠 생성 완료, 글 목록 새로고침 중...');
+                setTimeout(async () => {
+                    await this.loadPosts();
+                    await this.loadBotStats();
+                    console.log('글 목록 새로고침 완료');
+                }, 1500); // 1.5초 후 새로고침 (Firebase 동기화 시간 고려)
             } else {
+                console.error('봇 시스템을 찾을 수 없음');
                 this.showNotification('봇 시스템을 찾을 수 없습니다.', 'error');
             }
         } catch (error) {

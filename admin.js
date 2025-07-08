@@ -61,7 +61,8 @@ class AdminPanel {
                     this.posts.push({
                         id: doc.id,
                         ...data,
-                        date: new Date(data.date).toLocaleString('ko-KR')
+                        date: data.date, // 원본 날짜 유지
+                        displayDate: new Date(data.date).toLocaleString('ko-KR') // 표시용 날짜 추가
                     });
                 });
                 
@@ -78,6 +79,12 @@ class AdminPanel {
                 this.posts = JSON.parse(savedPosts);
                 // 날짜 기준 내림차순 정렬
                 this.posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+                // displayDate 필드 추가
+                this.posts.forEach(post => {
+                    if (!post.displayDate) {
+                        post.displayDate = new Date(post.date).toLocaleString('ko-KR');
+                    }
+                });
             } else {
                 // 샘플 데이터 생성
                 this.generateSampleData();
@@ -89,6 +96,14 @@ class AdminPanel {
     }
 
     generateSampleData() {
+        // 이미 샘플 데이터가 있으면 생성하지 않음
+        if (localStorage.getItem('viecoday_posts')) {
+            const savedPosts = JSON.parse(localStorage.getItem('viecoday_posts'));
+            this.posts = savedPosts;
+            this.posts.sort((a, b) => new Date(b.date) - new Date(a.date));
+            return;
+        }
+        
         const samplePosts = [];
         const categories = ['부동산', '셀소·미팅·모임', '썸·연애', '일상', '취미', '음식', '여행', '직장'];
         const sampleTitles = [
@@ -123,7 +138,8 @@ class AdminPanel {
                 title: randomTitle + (i > 8 ? ` (${i})` : ''),
                 content: randomContent,
                 author: randomCategory,
-                date: randomDate.toLocaleString('ko-KR'),
+                date: randomDate.toISOString(), // ISO 문자열로 저장
+                displayDate: randomDate.toLocaleString('ko-KR'), // 표시용 날짜
                 likes: Math.floor(Math.random() * 50),
                 liked: false,
                 comments: this.generateSampleComments(i)
@@ -391,7 +407,7 @@ class AdminPanel {
                 <td class="content-col">
                     <div class="content-preview">${this.truncateText(post.content, 100)}</div>
                 </td>
-                <td class="date-col">${post.date}</td>
+                <td class="date-col">${post.displayDate || new Date(post.date).toLocaleString('ko-KR')}</td>
                 <td class="stats-col">
                     <div class="stats-info">
                         <span>❤️ ${post.likes}</span>
@@ -430,7 +446,7 @@ class AdminPanel {
         document.getElementById('detailAuthor').textContent = post.author;
         document.getElementById('detailTitle').textContent = post.title;
         document.getElementById('detailContent').textContent = post.content;
-        document.getElementById('detailDate').textContent = post.date;
+        document.getElementById('detailDate').textContent = post.displayDate || new Date(post.date).toLocaleString('ko-KR');
         document.getElementById('detailLikes').textContent = post.likes;
 
         const commentsHtml = post.comments.length > 0 

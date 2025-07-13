@@ -169,17 +169,98 @@ class ContentBot {
         console.log('프롬프트 기반 컨텐츠 생성 시작');
         console.log('현재 프롬프트:', this.config.prompt);
         
-        // 사용자 프롬프트 분석 및 컨텐츠 생성
-        const generatedContent = await this.generateContentFromUserPrompt(this.config.prompt);
-        
-        return {
-            title: generatedContent.title,
-            content: generatedContent.content,
-            author: 'AI봇'
-        };
+        try {
+            // DeepSeek API 사용 가능 여부 확인
+            if (window.deepSeekAPI && window.deepSeekAPI.apiKey) {
+                console.log('✅ DeepSeek API를 사용하여 컨텐츠 생성');
+                const generatedContent = await this.generateContentWithDeepSeek(this.config.prompt);
+                return {
+                    title: generatedContent.title,
+                    content: generatedContent.content,
+                    author: 'AI봇'
+                };
+            } else {
+                console.log('❌ DeepSeek API 미설정 - 기본 템플릿 사용');
+                const generatedContent = await this.generateContentFromUserPrompt(this.config.prompt);
+                return {
+                    title: generatedContent.title,
+                    content: generatedContent.content,
+                    author: 'AI봇'
+                };
+            }
+        } catch (error) {
+            console.error('❌ AI 컨텐츠 생성 실패, 백업 템플릿 사용:', error);
+            // API 실패 시 기본 템플릿으로 백업
+            const generatedContent = await this.generateContentFromUserPrompt(this.config.prompt);
+            return {
+                title: generatedContent.title,
+                content: generatedContent.content,
+                author: 'AI봇'
+            };
+        }
     }
 
-    // 사용자 프롬프트를 분석하여 컨텐츠 생성
+    // DeepSeek API를 사용한 컨텐츠 생성
+    async generateContentWithDeepSeek(prompt) {
+        console.log('DeepSeek API 컨텐츠 생성 시작');
+        console.log('사용자 프롬프트:', prompt);
+        
+        // 랜덤 요소 추가로 다양한 컨텐츠 생성
+        const randomTopics = ['일상', '음식', '여행', '취미', '운동', '독서', '영화', '음악', '날씨', '계절'];
+        const randomMoods = ['재미있는', '따뜻한', '감동적인', '유쾌한', '편안한', '신나는'];
+        const randomTopic = randomTopics[Math.floor(Math.random() * randomTopics.length)];
+        const randomMood = randomMoods[Math.floor(Math.random() * randomMoods.length)];
+        const randomNumber = Math.floor(Math.random() * 1000);
+        
+        // 더 구체적이고 다양한 시스템 프롬프트 구성
+        const systemPrompt = `당신은 한국의 친근한 커뮤니티 사이트를 위한 컨텐츠 생성 AI입니다. 
+        
+        다음 규칙을 따라 매번 다른 글을 작성해주세요:
+        1. 한국어로 자연스럽고 친근한 톤으로 작성
+        2. 커뮤니티 사용자들이 공감할 수 있는 내용
+        3. 제목은 15자 이내로 간결하고 흥미롭게
+        4. 내용은 80-200자 정도로 적당한 길이
+        5. 매번 다른 주제와 관점으로 창의적으로 작성
+        6. 응답 형식: {"title": "제목", "content": "내용"}
+        
+        추가 지시사항:
+        - 오늘의 추천 주제: ${randomTopic}
+        - 글의 분위기: ${randomMood}
+        - 개성을 위한 랜덤 요소: ${randomNumber}
+        - 실제 경험담이나 개인적인 느낌을 담아서 작성
+        - 질문이나 소통을 유도하는 요소 포함
+        
+        사용자 요청: ${prompt}`;
+        
+        console.log('시스템 프롬프트:', systemPrompt);
+        
+        try {
+            console.log('=== DeepSeek API 호출 시작 ===');
+            console.log('API 키 상태:', window.deepSeekAPI.apiKey ? '설정됨' : '미설정');
+            console.log('프롬프트 길이:', prompt.length);
+            
+            const generatedText = await window.deepSeekAPI.generateContent(prompt, systemPrompt);
+            console.log('=== DeepSeek API 응답 ===');
+            console.log('원본 응답:', generatedText);
+            
+            const parsedContent = window.deepSeekAPI.parseContent(generatedText);
+            console.log('=== 파싱된 컨텐츠 ===');
+            console.log('제목:', parsedContent.title);
+            console.log('내용:', parsedContent.content);
+            console.log('========================');
+            
+            return parsedContent;
+            
+        } catch (error) {
+            console.error('=== DeepSeek API 오류 ===');
+            console.error('오류 메시지:', error.message);
+            console.error('오류 스택:', error.stack);
+            console.error('===================');
+            throw error;
+        }
+    }
+
+    // 사용자 프롬프트를 분석하여 컨텐츠 생성 (백업 템플릿 시스템)
     async generateContentFromUserPrompt(prompt) {
         console.log('사용자 프롬프트 분석:', prompt);
         

@@ -223,6 +223,41 @@ class AdminPanel {
                 e.target.style.display = 'none';
             }
         });
+
+        // 탭 네비게이션
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const targetTab = e.target.getAttribute('data-tab');
+                this.switchTab(targetTab);
+            });
+        });
+
+        // 봇 관리 관련
+        document.getElementById('startBotBtn').addEventListener('click', () => this.startBot());
+        document.getElementById('stopBotBtn').addEventListener('click', () => this.stopBot());
+        document.getElementById('generateNowBtn').addEventListener('click', () => this.generateNow());
+        document.getElementById('saveBotConfigBtn').addEventListener('click', () => this.saveBotConfig());
+        document.getElementById('refreshLogsBtn').addEventListener('click', () => this.loadBotLogs());
+        document.getElementById('clearLogsBtn').addEventListener('click', () => this.clearBotLogs());
+
+        // API 설정 관련
+        const saveApiConfigBtn = document.getElementById('saveApiConfigBtn');
+        const testApiBtn = document.getElementById('testApiBtn');
+        const toggleApiKeyBtn = document.getElementById('toggleApiKeyBtn');
+        const refreshUsageBtn = document.getElementById('refreshUsageBtn');
+        const resetUsageBtn = document.getElementById('resetUsageBtn');
+        const refreshApiLogsBtn = document.getElementById('refreshApiLogsBtn');
+        const clearApiLogsBtn = document.getElementById('clearApiLogsBtn');
+        const logFilterBtn = document.getElementById('logFilterBtn');
+
+        if (saveApiConfigBtn) saveApiConfigBtn.addEventListener('click', () => this.saveApiConfig());
+        if (testApiBtn) testApiBtn.addEventListener('click', () => this.testApiConnection());
+        if (toggleApiKeyBtn) toggleApiKeyBtn.addEventListener('click', () => this.toggleApiKeyVisibility());
+        if (refreshUsageBtn) refreshUsageBtn.addEventListener('click', () => this.refreshApiUsage());
+        if (resetUsageBtn) resetUsageBtn.addEventListener('click', () => this.resetApiUsage());
+        if (refreshApiLogsBtn) refreshApiLogsBtn.addEventListener('click', () => this.loadApiLogs());
+        if (clearApiLogsBtn) clearApiLogsBtn.addEventListener('click', () => this.clearApiLogs());
+        if (logFilterBtn) logFilterBtn.addEventListener('change', () => this.filterApiLogs());
     }
 
     async checkLoginStatus() {
@@ -700,7 +735,7 @@ class AdminPanel {
             selectedTabContent.classList.add('active');
         }
 
-        // 봇 탭이 선택되면 봇 상태 업데이트
+        // 탭별 초기화
         if (tabName === 'bot') {
             setTimeout(() => {
                 this.updateBotStatus();
@@ -710,6 +745,16 @@ class AdminPanel {
                     this.loadBotLogs();
                 } catch (error) {
                     console.log('Firebase data loading skipped due to permissions');
+                }
+            }, 100);
+        } else if (tabName === 'api') {
+            setTimeout(() => {
+                this.loadApiConfig();
+                this.updateApiStatus();
+                try {
+                    this.loadApiLogs();
+                } catch (error) {
+                    console.log('API logs loading skipped due to permissions');
                 }
             }, 100);
         }
@@ -1025,6 +1070,261 @@ class AdminPanel {
                 document.body.removeChild(notification);
             }, 300);
         }, 3000);
+    }
+
+    // API 설정 로드
+    async loadApiConfig() {
+        try {
+            if (window.deepSeekAPI) {
+                await window.deepSeekAPI.loadConfig();
+                const status = window.deepSeekAPI.getStatus();
+                
+                // 폼에 현재 설정 표시
+                const apiKeyInput = document.getElementById('deepseekApiKey');
+                const modelSelect = document.getElementById('deepseekModel');
+                const maxUsageInput = document.getElementById('maxDailyUsage');
+                
+                if (apiKeyInput && window.deepSeekAPI.apiKey) {
+                    apiKeyInput.value = window.deepSeekAPI.apiKey;
+                }
+                if (modelSelect) {
+                    modelSelect.value = window.deepSeekAPI.model;
+                }
+                if (maxUsageInput) {
+                    maxUsageInput.value = window.deepSeekAPI.maxDailyUsage;
+                }
+                
+                console.log('API 설정 로드 완료');
+            }
+        } catch (error) {
+            console.error('API 설정 로드 실패:', error);
+            this.showNotification('API 설정 로드에 실패했습니다.', 'error');
+        }
+    }
+
+    // API 설정 저장
+    async saveApiConfig() {
+        try {
+            const apiKey = document.getElementById('deepseekApiKey').value.trim();
+            const model = document.getElementById('deepseekModel').value;
+            const maxUsage = parseInt(document.getElementById('maxDailyUsage').value);
+            
+            if (!apiKey) {
+                this.showNotification('API 키를 입력해주세요.', 'error');
+                return;
+            }
+            
+            if (window.deepSeekAPI) {
+                window.deepSeekAPI.setApiKey(apiKey);
+                window.deepSeekAPI.setModel(model);
+                window.deepSeekAPI.setMaxDailyUsage(maxUsage);
+                
+                await window.deepSeekAPI.saveConfig();
+                this.showNotification('API 설정이 저장되었습니다.', 'success');
+                this.updateApiStatus();
+            }
+        } catch (error) {
+            console.error('API 설정 저장 실패:', error);
+            this.showNotification('API 설정 저장에 실패했습니다.', 'error');
+        }
+    }
+
+    // API 연결 테스트
+    async testApiConnection() {
+        try {
+            if (!window.deepSeekAPI || !window.deepSeekAPI.apiKey) {
+                this.showNotification('API 키를 먼저 설정해주세요.', 'error');
+                return;
+            }
+            
+            this.showNotification('API 연결을 테스트하고 있습니다...', 'info');
+            
+            const testPrompt = '간단한 인사말을 한국어로 작성해주세요.';
+            const response = await window.deepSeekAPI.generateContent(testPrompt);
+            
+            if (response) {
+                this.showNotification('API 연결 테스트가 성공했습니다!', 'success');
+                console.log('API 테스트 응답:', response);
+            } else {
+                this.showNotification('API 응답이 없습니다.', 'error');
+            }
+        } catch (error) {
+            console.error('API 테스트 실패:', error);
+            this.showNotification(`API 테스트 실패: ${error.message}`, 'error');
+        }
+    }
+
+    // API 키 표시/숨기기
+    toggleApiKeyVisibility() {
+        const apiKeyInput = document.getElementById('deepseekApiKey');
+        const toggleBtn = document.getElementById('toggleApiKeyBtn');
+        
+        if (apiKeyInput.type === 'password') {
+            apiKeyInput.type = 'text';
+            toggleBtn.textContent = '숨기기';
+        } else {
+            apiKeyInput.type = 'password';
+            toggleBtn.textContent = '보기';
+        }
+    }
+
+    // API 상태 업데이트
+    updateApiStatus() {
+        if (window.deepSeekAPI) {
+            const status = window.deepSeekAPI.getStatus();
+            
+            document.getElementById('apiKeyStatus').textContent = status.apiKey;
+            document.getElementById('currentModel').textContent = status.model;
+            document.getElementById('dailyUsage').textContent = `${status.currentUsage} / ${status.maxDailyUsage}`;
+            document.getElementById('remainingUsage').textContent = status.remainingUsage;
+            
+            // 사용량 바 업데이트
+            const usagePercent = (status.currentUsage / status.maxDailyUsage) * 100;
+            document.getElementById('usageBar').style.width = `${usagePercent}%`;
+            document.getElementById('usagePercentage').textContent = `${Math.round(usagePercent)}%`;
+            
+            // 사용량에 따른 색상 변경
+            const usageBar = document.getElementById('usageBar');
+            if (usagePercent < 50) {
+                usageBar.style.backgroundColor = '#28a745';
+            } else if (usagePercent < 80) {
+                usageBar.style.backgroundColor = '#ffc107';
+            } else {
+                usageBar.style.backgroundColor = '#dc3545';
+            }
+        }
+    }
+
+    // API 사용량 새로고침
+    async refreshApiUsage() {
+        try {
+            if (window.deepSeekAPI) {
+                await window.deepSeekAPI.loadUsageStats();
+                this.updateApiStatus();
+                this.showNotification('사용량이 새로고침되었습니다.', 'success');
+            }
+        } catch (error) {
+            console.error('사용량 새로고침 실패:', error);
+            this.showNotification('사용량 새로고침에 실패했습니다.', 'error');
+        }
+    }
+
+    // API 사용량 초기화
+    async resetApiUsage() {
+        if (!confirm('오늘의 사용량을 초기화하시겠습니까?')) {
+            return;
+        }
+        
+        try {
+            if (window.deepSeekAPI) {
+                window.deepSeekAPI.currentUsage = 0;
+                await window.deepSeekAPI.saveUsageStats();
+                this.updateApiStatus();
+                this.showNotification('사용량이 초기화되었습니다.', 'success');
+            }
+        } catch (error) {
+            console.error('사용량 초기화 실패:', error);
+            this.showNotification('사용량 초기화에 실패했습니다.', 'error');
+        }
+    }
+
+    // API 로그 로드
+    async loadApiLogs() {
+        try {
+            if (window.db && window.firestore) {
+                const q = window.firestore.query(
+                    window.firestore.collection(window.db, 'deepseek_logs'),
+                    window.firestore.orderBy('timestamp', 'desc')
+                );
+                const querySnapshot = await window.firestore.getDocs(q);
+                
+                const logsList = document.getElementById('apiLogsList');
+                logsList.innerHTML = '';
+
+                if (querySnapshot.empty) {
+                    logsList.innerHTML = '<div class="log-item"><span class="log-time">-</span><span class="log-status">-</span><span class="log-message">API 로그가 없습니다.</span></div>';
+                    return;
+                }
+
+                querySnapshot.forEach((doc) => {
+                    const log = doc.data();
+                    this.addApiLogItem(log);
+                });
+            }
+        } catch (error) {
+            console.error('API 로그 로드 실패:', error);
+            const logsList = document.getElementById('apiLogsList');
+            if (logsList) {
+                logsList.innerHTML = '<div class="log-item"><span class="log-time">-</span><span class="log-status">오류</span><span class="log-message">API 로그 로드에 실패했습니다.</span></div>';
+            }
+        }
+    }
+
+    // API 로그 항목 추가
+    addApiLogItem(log) {
+        const logsList = document.getElementById('apiLogsList');
+        const logElement = document.createElement('div');
+        logElement.className = 'log-item';
+        logElement.setAttribute('data-status', log.success ? 'success' : 'error');
+        
+        const time = new Date(log.timestamp).toLocaleString('ko-KR');
+        const status = log.success ? '성공' : '실패';
+        const message = log.success 
+            ? `컨텐츠 생성 성공 (사용량: ${log.dailyUsage})`
+            : `API 오류: ${log.error}`;
+        
+        logElement.innerHTML = `
+            <span class="log-time">${time}</span>
+            <span class="log-status ${log.success ? 'success' : 'error'}">${status}</span>
+            <span class="log-message">${message}</span>
+        `;
+        
+        logsList.appendChild(logElement);
+    }
+
+    // API 로그 필터링
+    filterApiLogs() {
+        const filter = document.getElementById('logFilterBtn').value;
+        const logItems = document.querySelectorAll('#apiLogsList .log-item');
+        
+        logItems.forEach(item => {
+            const status = item.getAttribute('data-status');
+            if (filter === 'all' || 
+                (filter === 'success' && status === 'success') ||
+                (filter === 'error' && status === 'error')) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+
+    // API 로그 삭제
+    async clearApiLogs() {
+        if (!confirm('모든 API 로그를 삭제하시겠습니까?')) {
+            return;
+        }
+
+        try {
+            if (window.db && window.firestore) {
+                const q = window.firestore.query(
+                    window.firestore.collection(window.db, 'deepseek_logs')
+                );
+                const querySnapshot = await window.firestore.getDocs(q);
+                
+                const deletePromises = [];
+                querySnapshot.forEach((doc) => {
+                    deletePromises.push(window.firestore.deleteDoc(doc.ref));
+                });
+                
+                await Promise.all(deletePromises);
+                this.showNotification('API 로그가 삭제되었습니다.', 'success');
+                this.loadApiLogs();
+            }
+        } catch (error) {
+            console.error('API 로그 삭제 실패:', error);
+            this.showNotification('API 로그 삭제에 실패했습니다.', 'error');
+        }
     }
 }
 

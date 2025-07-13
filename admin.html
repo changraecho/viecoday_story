@@ -39,6 +39,7 @@
             <div class="tab-navigation">
                 <button class="tab-btn active" data-tab="posts">글 관리</button>
                 <button class="tab-btn" data-tab="bot">봇 관리</button>
+                <button class="tab-btn" data-tab="api">API 설정</button>
             </div>
 
             <!-- 글 관리 탭 -->
@@ -153,6 +154,98 @@
                     </div>
                 </div>
             </div>
+
+            <!-- API 설정 탭 -->
+            <div id="apiTab" class="tab-content">
+                <div class="api-settings-container">
+                    <div class="api-config-section">
+                        <h3>DeepSeek API 설정</h3>
+                        <div class="config-form">
+                            <div class="form-group">
+                                <label for="deepseekApiKey">API 키:</label>
+                                <input type="password" id="deepseekApiKey" placeholder="DeepSeek API 키를 입력하세요" />
+                                <button type="button" id="toggleApiKeyBtn" class="toggle-btn">보기</button>
+                            </div>
+                            <div class="form-group">
+                                <label for="deepseekModel">모델:</label>
+                                <select id="deepseekModel">
+                                    <option value="deepseek-chat">deepseek-chat</option>
+                                    <option value="deepseek-coder">deepseek-coder</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="maxDailyUsage">일일 사용량 제한:</label>
+                                <input type="number" id="maxDailyUsage" min="1" max="10000" value="1000" />
+                                <span class="help-text">하루 최대 API 호출 횟수</span>
+                            </div>
+                            <div class="form-actions">
+                                <button id="saveApiConfigBtn" class="control-btn success">설정 저장</button>
+                                <button id="testApiBtn" class="control-btn">API 테스트</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="api-status-section">
+                        <h3>API 상태</h3>
+                        <div class="status-grid">
+                            <div class="status-item">
+                                <span class="status-label">API 키 상태:</span>
+                                <span class="status-value" id="apiKeyStatus">미설정</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">현재 모델:</span>
+                                <span class="status-value" id="currentModel">deepseek-chat</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">오늘 사용량:</span>
+                                <span class="status-value" id="dailyUsage">0 / 1000</span>
+                            </div>
+                            <div class="status-item">
+                                <span class="status-label">남은 사용량:</span>
+                                <span class="status-value" id="remainingUsage">1000</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="api-usage-section">
+                        <h3>사용량 통계</h3>
+                        <div class="usage-chart">
+                            <div class="usage-bar">
+                                <div class="usage-fill" id="usageBar" style="width: 0%"></div>
+                            </div>
+                            <div class="usage-text">
+                                <span id="usagePercentage">0%</span> 사용됨
+                            </div>
+                        </div>
+                        <div class="usage-actions">
+                            <button id="refreshUsageBtn" class="control-btn">사용량 새로고침</button>
+                            <button id="resetUsageBtn" class="control-btn danger">사용량 초기화</button>
+                        </div>
+                    </div>
+
+                    <div class="api-logs-section">
+                        <h3>API 호출 로그</h3>
+                        <div class="logs-container">
+                            <div class="logs-header">
+                                <button id="refreshApiLogsBtn" class="control-btn">새로고침</button>
+                                <button id="clearApiLogsBtn" class="control-btn danger">로그 삭제</button>
+                                <select id="logFilterBtn" class="filter-select">
+                                    <option value="all">전체</option>
+                                    <option value="success">성공</option>
+                                    <option value="error">실패</option>
+                                </select>
+                            </div>
+                            <div class="api-logs-list" id="apiLogsList">
+                                <div class="log-item">
+                                    <span class="log-time">-</span>
+                                    <span class="log-status">-</span>
+                                    <span class="log-message">API 로그를 불러오는 중...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -220,19 +313,23 @@
 
     <!-- Firebase SDK -->
     <script src="firebase-config.js" type="module"></script>
+    <script src="http://localhost:8080/deepseek-api.js"></script>
     <script src="content-bot.js"></script>
     <script>
         // DOM과 Firebase 로드 완료 후 AdminPanel 초기화
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOM 로드 완료, AdminPanel 초기화 대기 중...');
             
-            // 약간의 지연 후 AdminPanel 초기화 (Firebase 모듈 로드 시간 고려)
+            // Firebase와 다른 스크립트들 로드 대기
             setTimeout(() => {
-                console.log('AdminPanel 인스턴스 생성 시작');
+                console.log('스크립트 로드 대기 완료');
+                console.log('DeepSeek API 객체:', window.deepSeekAPI);
+                console.log('Content Bot 객체:', window.contentBot);
+                
+                // AdminPanel 초기화
                 const adminPanelInstance = new AdminPanel();
-                // 전역 접근을 위한 변수 설정
                 window.adminPanel = adminPanelInstance;
-            }, 500);
+            }, 1500);
         });
     </script>
     <script src="admin.js"></script>

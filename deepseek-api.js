@@ -61,45 +61,38 @@ class DeepSeekAPI {
         }
     }
     
-    // 사용량 통계 로드
+    // 사용량 통계 로드 (간소화)
     async loadUsageStats() {
         try {
+            // 로컬 스토리지에서 사용량 로드
             const today = new Date().toDateString();
-            const usageRef = window.firestore.collection(window.db, 'deepseek_usage');
-            const q = window.firestore.query(
-                usageRef,
-                window.firestore.where('date', '==', today)
-            );
+            const storedData = localStorage.getItem('deepseek_usage');
             
-            const querySnapshot = await window.firestore.getDocs(q);
-            
-            if (!querySnapshot.empty) {
-                const usage = querySnapshot.docs[0].data();
-                this.currentUsage = usage.count || 0;
-                this.lastResetDate = usage.date;
-                console.log(`오늘 DeepSeek 사용량: ${this.currentUsage}/${this.maxDailyUsage}`);
+            if (storedData) {
+                const data = JSON.parse(storedData);
+                if (data.date === today) {
+                    this.currentUsage = data.count || 0;
+                    this.lastResetDate = data.date;
+                } else {
+                    this.currentUsage = 0;
+                    this.lastResetDate = today;
+                }
             } else {
                 this.currentUsage = 0;
-                await this.saveUsageStats();
+                this.lastResetDate = today;
             }
+            
+            console.log(`오늘 DeepSeek 사용량: ${this.currentUsage}/${this.maxDailyUsage}`);
         } catch (error) {
             console.error('사용량 통계 로드 실패:', error);
             this.currentUsage = 0;
         }
     }
     
-    // 사용량 통계 저장
+    // 사용량 통계 저장 (간소화)
     async saveUsageStats() {
         try {
             const today = new Date().toDateString();
-            const usageRef = window.firestore.collection(window.db, 'deepseek_usage');
-            const q = window.firestore.query(
-                usageRef,
-                window.firestore.where('date', '==', today)
-            );
-            
-            const querySnapshot = await window.firestore.getDocs(q);
-            
             const usageData = {
                 date: today,
                 count: this.currentUsage,
@@ -107,12 +100,8 @@ class DeepSeekAPI {
                 updatedAt: new Date().toISOString()
             };
             
-            if (querySnapshot.empty) {
-                await window.firestore.addDoc(usageRef, usageData);
-            } else {
-                const docRef = querySnapshot.docs[0].ref;
-                await window.firestore.updateDoc(docRef, usageData);
-            }
+            // 로컬 스토리지에 저장
+            localStorage.setItem('deepseek_usage', JSON.stringify(usageData));
             
             console.log('사용량 통계 저장됨:', this.currentUsage);
         } catch (error) {

@@ -20,18 +20,24 @@ class DeepSeekAPI {
     // 설정 로드
     async loadConfig() {
         try {
+            // Firebase가 로드되지 않았으면 기본 설정 사용
+            if (!window.firestore || !window.db) {
+                console.log('Firebase 미로드 - 기본 DeepSeek 설정 사용');
+                return;
+            }
+            
             const configRef = window.firestore.collection(window.db, 'deepseek_config');
             const querySnapshot = await window.firestore.getDocs(configRef);
             
             if (!querySnapshot.empty) {
                 const config = querySnapshot.docs[0].data();
-                this.apiKey = config.apiKey || '';
-                this.model = config.model || 'deepseek-chat';
-                this.maxDailyUsage = config.maxDailyUsage || 1000;
+                this.apiKey = config.apiKey || this.apiKey;
+                this.model = config.model || this.model;
+                this.maxDailyUsage = config.maxDailyUsage || this.maxDailyUsage;
                 console.log('DeepSeek 설정 로드됨');
             }
         } catch (error) {
-            console.error('DeepSeek 설정 로드 실패:', error);
+            console.log('DeepSeek 설정 로드 실패 - 기본 설정 사용');
         }
     }
     

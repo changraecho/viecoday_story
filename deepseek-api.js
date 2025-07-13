@@ -274,18 +274,60 @@ class DeepSeekAPI {
     // 컨텐츠 파싱 (제목과 내용 분리)
     parseContent(generatedContent) {
         try {
-            // JSON 형태로 응답이 온 경우
+            console.log('파싱할 원본 컨텐츠:', generatedContent);
+            
+            // JSON 형태로 응답이 온 경우 - 더 견고한 파싱
             if (generatedContent.includes('{') && generatedContent.includes('}')) {
-                const jsonMatch = generatedContent.match(/\{[\s\S]*\}/);
-                if (jsonMatch) {
-                    const parsed = JSON.parse(jsonMatch[0]);
-                    if (parsed.title && parsed.content) {
-                        return {
-                            title: parsed.title,
-                            content: parsed.content
-                        };
+                // 가장 완전한 JSON 객체 찾기
+                const jsonMatches = generatedContent.match(/\{[^{}]*"title"[^{}]*"content"[^{}]*\}/g);
+                
+                if (jsonMatches && jsonMatches.length > 0) {
+                    for (const jsonMatch of jsonMatches) {
+                        try {
+                            const parsed = JSON.parse(jsonMatch);
+                            if (parsed.title && parsed.content) {
+                                console.log('JSON 파싱 성공:', parsed);
+                                return {
+                                    title: parsed.title.trim(),
+                                    content: parsed.content.trim()
+                                };
+                            }
+                        } catch (parseError) {
+                            console.log('JSON 파싱 시도 실패:', jsonMatch);
+                            continue;
+                        }
                     }
                 }
+                
+                // 기존 방식으로 재시도
+                try {
+                    const jsonMatch = generatedContent.match(/\{[\s\S]*\}/);
+                    if (jsonMatch) {
+                        const cleanJson = jsonMatch[0].replace(/[\u0000-\u001f\u007f-\u009f]/g, '');
+                        const parsed = JSON.parse(cleanJson);
+                        if (parsed.title && parsed.content) {
+                            console.log('기존 방식 JSON 파싱 성공:', parsed);
+                            return {
+                                title: parsed.title.trim(),
+                                content: parsed.content.trim()
+                            };
+                        }
+                    }
+                } catch (parseError) {
+                    console.log('기존 방식 JSON 파싱도 실패');
+                }
+            }
+            
+            // 텍스트에서 title: content: 패턴 찾기
+            const titleMatch = generatedContent.match(/title[:：]\s*["']?([^"'\n]+)["']?/i);
+            const contentMatch = generatedContent.match(/content[:：]\s*["']?([^"']+)["']?/i);
+            
+            if (titleMatch && contentMatch) {
+                console.log('title/content 패턴 파싱 성공');
+                return {
+                    title: titleMatch[1].trim(),
+                    content: contentMatch[1].trim()
+                };
             }
             
             // 일반 텍스트에서 제목과 내용 분리
@@ -296,15 +338,18 @@ class DeepSeekAPI {
                 const title = lines[0].replace(/^제목[:：]\s*/, '').replace(/^title[:：]\s*/i, '').trim();
                 const content = lines.slice(1).join('\n').replace(/^내용[:：]\s*/, '').replace(/^content[:：]\s*/i, '').trim();
                 
+                console.log('라인 분할 파싱 성공');
                 return {
-                    title: title || '제목 없음',
-                    content: content || '내용 없음'
+                    title: title || '생성된 글',
+                    content: content || generatedContent.substring(0, 200) + '...'
                 };
             }
             
-            // 분리할 수 없는 경우 전체를 내용으로 사용
+            // 마지막 백업: 전체 텍스트를 내용으로 사용하되 첫 15자를 제목으로
+            const fallbackTitle = generatedContent.substring(0, 15).replace(/[^\w\s가-힣]/g, '') + '...';
+            console.log('백업 파싱 사용');
             return {
-                title: '생성된 글',
+                title: fallbackTitle || '생성된 글',
                 content: generatedContent
             };
             

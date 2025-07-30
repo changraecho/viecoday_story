@@ -95,29 +95,46 @@ class Router {
         document.querySelector('.container').style.display = 'none';
         document.getElementById('floatingBtn').style.display = 'none';
         
+        console.log('글 상세 페이지 진입:', postId, 'posts 배열 길이:', posts.length);
+        
         // 로딩 상태 표시
         this.showPostDetailLoading();
         
-        // 글이 로드되기를 기다린 후 렌더링
-        if (posts.length > 0) {
-            const post = posts.find(p => p.id === postId);
-            if (post) {
-                renderPostDetail(postId);
-            } else {
-                this.showPostNotFound();
-            }
-        } else {
-            // 글이 아직 로드되지 않았으면 로드 후 렌더링
-            this.waitForPostsAndRender(postId);
-        }
+        // 항상 Firebase에서 최신 데이터를 다시 로드
+        this.loadPostAndRender(postId);
         
         // 글 상세 페이지 진입 이벤트
-        const post = posts.find(p => p.id === postId);
         logAnalyticsEvent('select_content', {
             content_type: 'post',
             item_id: postId,
-            content_title: post ? post.title : 'Unknown'
+            content_title: 'Loading'
         });
+    }
+
+    async loadPostAndRender(postId) {
+        console.log('Firebase에서 최신 데이터 로드 시작:', postId);
+        
+        try {
+            // Firebase에서 최신 데이터 로드
+            await loadPostsFromFirebase();
+            
+            console.log('Firebase 로드 완료, posts 길이:', posts.length);
+            console.log('찾는 글 ID:', postId);
+            
+            // 로드 후 글 찾기
+            const post = posts.find(p => p.id === postId);
+            
+            if (post) {
+                console.log('글 찾음:', post.title);
+                renderPostDetail(postId);
+            } else {
+                console.log('글을 찾을 수 없음. 전체 글 ID 목록:', posts.map(p => p.id));
+                this.showPostNotFound();
+            }
+        } catch (error) {
+            console.error('Firebase 로드 실패:', error);
+            this.showPostNotFound();
+        }
     }
 
     showPostDetailLoading() {
@@ -177,27 +194,6 @@ class Router {
         if (commentSubmit) commentSubmit.style.display = 'none';
     }
 
-    async waitForPostsAndRender(postId) {
-        // Firebase에서 다시 데이터를 로드해보기
-        console.log('글 데이터가 없어서 Firebase에서 다시 로드 시도:', postId);
-        
-        try {
-            await loadPostsFromFirebase();
-            
-            // 로드 후 다시 체크
-            const post = posts.find(p => p.id === postId);
-            if (post) {
-                console.log('Firebase 재로드 후 글 찾음:', post.title);
-                renderPostDetail(postId);
-            } else {
-                console.log('Firebase 재로드 후에도 글을 찾을 수 없음:', postId);
-                this.showPostNotFound();
-            }
-        } catch (error) {
-            console.error('Firebase 재로드 실패:', error);
-            this.showPostNotFound();
-        }
-    }
 }
 
 // 전역 라우터 인스턴스
@@ -484,15 +480,26 @@ async function toggleLikeFromList(postId) {
 }
 
 function renderPostDetail(postId) {
+    console.log('renderPostDetail 시작:', postId);
+    
     const post = posts.find(p => p.id === postId);
     if (!post) {
+        console.error('renderPostDetail: 글을 찾을 수 없음:', postId);
         if (router) {
             router.showPostNotFound();
         }
         return;
     }
 
+    console.log('renderPostDetail: 글 찾음:', post.title);
+
     const postDetailElement = document.getElementById('postDetail');
+    if (!postDetailElement) {
+        console.error('renderPostDetail: postDetail 엘리먼트를 찾을 수 없음');
+        return;
+    }
+
+    // 글 내용 렌더링
     postDetailElement.innerHTML = `
         <div class="post-header">
             <div class="post-author">
@@ -509,12 +516,22 @@ function renderPostDetail(postId) {
         <div class="post-content">${post.content}</div>
     `;
 
+    console.log('renderPostDetail: 글 내용 렌더링 완료');
+
     // 액션 버튼 업데이트 및 표시
     const likeBtn = document.getElementById('detailLikeBtn');
     const commentBtn = document.getElementById('detailCommentBtn');
     const shareBtn = document.getElementById('detailShareBtn');
     const commentInput = document.getElementById('commentInput');
     const commentSubmit = document.getElementById('commentSubmitBtn');
+
+    console.log('renderPostDetail: 버튼 엘리먼트들:', {
+        likeBtn: !!likeBtn,
+        commentBtn: !!commentBtn,
+        shareBtn: !!shareBtn,
+        commentInput: !!commentInput,
+        commentSubmit: !!commentSubmit
+    });
 
     if (likeBtn) {
         likeBtn.innerHTML = `
@@ -524,6 +541,7 @@ function renderPostDetail(postId) {
         likeBtn.className = `action-btn ${post.liked ? 'liked' : ''}`;
         likeBtn.onclick = () => toggleDetailLike(postId);
         likeBtn.style.display = 'flex';
+        console.log('renderPostDetail: 좋아요 버튼 설정 완료');
     }
 
     if (commentBtn) {
@@ -532,19 +550,28 @@ function renderPostDetail(postId) {
             <span class="count">${post.comments ? post.comments.length : 0}</span>
         `;
         commentBtn.style.display = 'flex';
+        console.log('renderPostDetail: 댓글 버튼 설정 완료');
     }
 
     if (shareBtn) {
         shareBtn.onclick = () => openShareModal(postId);
         shareBtn.style.display = 'flex';
+        console.log('renderPostDetail: 공유 버튼 설정 완료');
     }
 
     // 댓글 입력 필드 표시
-    if (commentInput) commentInput.style.display = 'block';
-    if (commentSubmit) commentSubmit.style.display = 'block';
+    if (commentInput) {
+        commentInput.style.display = 'block';
+        console.log('renderPostDetail: 댓글 입력창 표시');
+    }
+    if (commentSubmit) {
+        commentSubmit.style.display = 'block';
+        console.log('renderPostDetail: 댓글 제출 버튼 표시');
+    }
 
     // 댓글 목록 렌더링
     renderDetailComments(post.comments || []);
+    console.log('renderPostDetail: 댓글 목록 렌더링 완료');
 }
 
 function renderDetailComments(comments) {

@@ -4,6 +4,133 @@ let postIdCounter = 1;
 let currentPage = 'home';
 let currentPostId = null;
 
+// URL 라우팅 관리
+class Router {
+    constructor() {
+        this.routes = {
+            '/': () => this.showHomePage(),
+            '/write': () => this.showWritePage(),
+            '/post/:id': (id) => this.showPostPage(id)
+        };
+        this.init();
+    }
+
+    init() {
+        // 페이지 로드 시 현재 URL 처리
+        window.addEventListener('load', () => this.handleRoute());
+        
+        // 브라우저 뒤로가기/앞으로가기 처리
+        window.addEventListener('popstate', () => this.handleRoute());
+    }
+
+    handleRoute() {
+        const path = window.location.pathname;
+        const hash = window.location.hash.replace('#', '');
+        
+        // 해시 기반 라우팅도 지원
+        const routePath = hash || path;
+        
+        if (routePath === '/' || routePath === '') {
+            this.showHomePage();
+        } else if (routePath === '/write') {
+            this.showWritePage();
+        } else if (routePath.startsWith('/post/')) {
+            const postId = routePath.replace('/post/', '');
+            this.showPostPage(postId);
+        } else {
+            this.showHomePage(); // 기본값
+        }
+    }
+
+    navigateTo(path) {
+        // URL 업데이트 (페이지 새로고침 없이)
+        window.history.pushState({}, '', path);
+        this.handleRoute();
+    }
+
+    showHomePage() {
+        currentPage = 'home';
+        document.getElementById('writePage').style.display = 'none';
+        document.getElementById('detailPage').style.display = 'none';
+        document.querySelector('.container').style.display = 'block';
+        document.getElementById('floatingBtn').style.display = 'flex';
+        
+        // URL 업데이트
+        if (window.location.pathname !== '/') {
+            window.history.replaceState({}, '', '/');
+        }
+    }
+
+    showWritePage() {
+        currentPage = 'write';
+        document.getElementById('writePage').style.display = 'flex';
+        document.getElementById('detailPage').style.display = 'none';
+        document.querySelector('.container').style.display = 'none';
+        document.getElementById('floatingBtn').style.display = 'none';
+        
+        // 입력 필드 초기화
+        document.getElementById('postTitle').value = '';
+        document.getElementById('postContent').value = '';
+        
+        // 글 작성 페이지 진입 이벤트
+        logAnalyticsEvent('page_view', {
+            page_title: 'Write Post',
+            page_location: window.location.href
+        });
+    }
+
+    showPostPage(postId) {
+        currentPage = 'detail';
+        currentPostId = postId;
+        document.getElementById('writePage').style.display = 'none';
+        document.getElementById('detailPage').style.display = 'flex';
+        document.querySelector('.container').style.display = 'none';
+        document.getElementById('floatingBtn').style.display = 'none';
+        
+        // 글이 로드되기를 기다린 후 렌더링
+        if (posts.length > 0) {
+            renderPostDetail(postId);
+        } else {
+            // 글이 아직 로드되지 않았으면 로드 후 렌더링
+            this.waitForPostsAndRender(postId);
+        }
+        
+        // 글 상세 페이지 진입 이벤트
+        const post = posts.find(p => p.id === postId);
+        logAnalyticsEvent('select_content', {
+            content_type: 'post',
+            item_id: postId,
+            content_title: post ? post.title : 'Unknown'
+        });
+    }
+
+    async waitForPostsAndRender(postId) {
+        // 최대 5초 동안 글 로드를 기다림
+        let attempts = 0;
+        const maxAttempts = 50;
+        
+        const checkPosts = () => {
+            if (posts.length > 0) {
+                renderPostDetail(postId);
+                return;
+            }
+            
+            attempts++;
+            if (attempts < maxAttempts) {
+                setTimeout(checkPosts, 100);
+            } else {
+                // 글을 찾을 수 없으면 홈으로 리다이렉트
+                this.navigateTo('/');
+            }
+        };
+        
+        checkPosts();
+    }
+}
+
+// 전역 라우터 인스턴스
+let router;
+
 // Firebase가 로드되기를 기다림
 function waitForFirebase() {
     return new Promise((resolve) => {
@@ -57,6 +184,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     // Firebase 로드 대기
     await waitForFirebase();
     
+    // 라우터 초기화
+    router = new Router();
+    
     const floatingBtn = document.getElementById('floatingBtn');
     const backBtn = document.getElementById('backBtn');
     const detailBackBtn = document.getElementById('detailBackBtn');
@@ -66,16 +196,16 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     // 플로팅 버튼 클릭 - 글 작성 페이지로 이동
     floatingBtn.addEventListener('click', function() {
-        showWritePage();
+        router.navigateTo('/write');
     });
 
     // 뒤로 가기 버튼들
     backBtn.addEventListener('click', function() {
-        showHomePage();
+        router.navigateTo('/');
     });
 
     detailBackBtn.addEventListener('click', function() {
-        showHomePage();
+        router.navigateTo('/');
     });
 
     // 글 작성 완료 버튼
@@ -114,49 +244,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     });
 });
 
+// 이전 버전과의 호환성을 위한 함수들 (라우터로 대체됨)
 function showHomePage() {
-    currentPage = 'home';
-    document.getElementById('writePage').style.display = 'none';
-    document.getElementById('detailPage').style.display = 'none';
-    document.querySelector('.container').style.display = 'block';
-    document.getElementById('floatingBtn').style.display = 'flex';
+    router.navigateTo('/');
 }
 
 function showWritePage() {
-    currentPage = 'write';
-    document.getElementById('writePage').style.display = 'flex';
-    document.getElementById('detailPage').style.display = 'none';
-    document.querySelector('.container').style.display = 'none';
-    document.getElementById('floatingBtn').style.display = 'none';
-    
-    // 입력 필드 초기화
-    document.getElementById('postTitle').value = '';
-    document.getElementById('postContent').value = '';
-    
-    // 글 작성 페이지 진입 이벤트
-    logAnalyticsEvent('page_view', {
-        page_title: 'Write Post',
-        page_location: window.location.href + '#write'
-    });
+    router.navigateTo('/write');
 }
 
 function showDetailPage(postId) {
-    currentPage = 'detail';
-    currentPostId = postId;
-    document.getElementById('writePage').style.display = 'none';
-    document.getElementById('detailPage').style.display = 'flex';
-    document.querySelector('.container').style.display = 'none';
-    document.getElementById('floatingBtn').style.display = 'none';
-    
-    renderPostDetail(postId);
-    
-    // 글 상세 페이지 진입 이벤트
-    const post = posts.find(p => p.id === postId);
-    logAnalyticsEvent('select_content', {
-        content_type: 'post',
-        item_id: postId,
-        content_title: post ? post.title : 'Unknown'
-    });
+    router.navigateTo('/post/' + postId);
 }
 
 async function createPost() {
@@ -193,7 +291,7 @@ async function createPost() {
             content_length: content.length
         });
         
-        showHomePage();
+        router.navigateTo('/');
         loadPostsFromFirebase(); // 새로고침
     } catch (error) {
         console.error('Lưu bài viết thất bại:', error);
@@ -255,7 +353,7 @@ function renderPosts() {
                     </div>
                 </div>
             </div>
-            <div class="post-content-area" onclick="showDetailPage('${post.id}')">
+            <div class="post-content-area" onclick="router.navigateTo('/post/${post.id}')">
                 <div class="post-title">${post.title}</div>
                 <div class="post-content">${post.content}</div>
             </div>
@@ -264,7 +362,7 @@ function renderPosts() {
                     <span>${post.liked ? '❤️' : '♡'}</span>
                     <span>${post.likes}</span>
                 </div>
-                <div class="stat-item" onclick="showDetailPage('${post.id}')">
+                <div class="stat-item" onclick="router.navigateTo('/post/${post.id}')">
                     <span>💬</span>
                     <span>${post.comments ? post.comments.length : 0}</span>
                 </div>
@@ -455,7 +553,8 @@ function openShareModal(postId) {
 function shareToFacebook() {
     const postId = document.getElementById('shareModal').getAttribute('data-post-id');
     const post = posts.find(p => p.id == postId);
-    const url = encodeURIComponent(window.location.href);
+    const postUrl = `${window.location.origin}/post/${postId}`;
+    const url = encodeURIComponent(postUrl);
     const text = encodeURIComponent(`${post.title} - ${post.content.substring(0, 100)}...`);
     window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`, '_blank');
 }
@@ -463,14 +562,17 @@ function shareToFacebook() {
 function shareToTwitter() {
     const postId = document.getElementById('shareModal').getAttribute('data-post-id');
     const post = posts.find(p => p.id == postId);
-    const url = encodeURIComponent(window.location.href);
+    const postUrl = `${window.location.origin}/post/${postId}`;
+    const url = encodeURIComponent(postUrl);
     const text = encodeURIComponent(`${post.title} - ${post.content.substring(0, 100)}...`);
     window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank');
 }
 
 function copyLink() {
-    const url = window.location.href;
-    navigator.clipboard.writeText(url).then(() => {
+    const postId = document.getElementById('shareModal').getAttribute('data-post-id');
+    const postUrl = postId ? `${window.location.origin}/post/${postId}` : window.location.href;
+    
+    navigator.clipboard.writeText(postUrl).then(() => {
         alert('Liên kết đã được sao chép!');
         document.getElementById('shareModal').style.display = 'none';
     }).catch(() => {

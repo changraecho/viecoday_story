@@ -386,30 +386,42 @@ body {
 }
 
 .comment-like-btn {
-    background: none;
-    border: none;
-    padding: 4px 8px;
-    border-radius: 12px;
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    padding: 6px 12px;
+    border-radius: 16px;
     cursor: pointer;
     font-size: 12px;
-    transition: all 0.3s;
+    font-weight: 500;
+    transition: all 0.2s ease;
     color: #666;
     display: flex;
     align-items: center;
     gap: 4px;
+    min-width: 50px;
+    justify-content: center;
 }
 
 .comment-like-btn:hover {
-    background: #f0f0f0;
+    background: #e9ecef;
+    border-color: #FFAB02;
+    color: #FFAB02;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .comment-like-btn.liked {
-    color: #FFAB02;
+    background: #FFAB02;
+    color: white;
+    border-color: #FFAB02;
     font-weight: bold;
 }
 
 .comment-like-btn.liked:hover {
-    background: #fff5e6;
+    background: #e6990a;
+    border-color: #e6990a;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(255, 171, 2, 0.3);
 }
 
 .comment-input-area {

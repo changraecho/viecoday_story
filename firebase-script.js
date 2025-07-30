@@ -499,7 +499,7 @@ function renderPostDetail(postId) {
         return;
     }
 
-    // 글 내용 렌더링
+    // 글 내용 렌더링 (액션 버튼은 HTML에서 별도로 처리)
     postDetailElement.innerHTML = `
         <div class="post-header">
             <div class="post-author">
@@ -585,7 +585,7 @@ function renderDetailComments(comments) {
             <div class="comment-content">${comment.content}</div>
             <div class="comment-actions">
                 <button class="comment-like-btn ${comment.liked ? 'liked' : ''}" onclick="toggleCommentLike('${comment.postId}', '${comment.id}')">
-                    <span>Thích</span>
+                    <span>${comment.liked ? '❤️' : '♡'}</span>
                     <span>${comment.likes}</span>
                 </button>
             </div>

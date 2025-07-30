@@ -4,12 +4,6 @@ let postIdCounter = 1;
 let currentPage = 'home';
 let currentPostId = null;
 
-// 무한 스크롤 페이지네이션 관련 변수
-let isLoading = false;
-let hasMorePosts = true;
-let lastPostDoc = null;
-const POSTS_PER_PAGE = 20;
-
 // URL 라우팅 관리
 class Router {
     constructor() {
@@ -284,9 +278,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         router.navigateTo('/');
     });
 
-    // 무한 스크롤 이벤트 리스너
-    setupInfiniteScroll();
-
     // 글 작성 완료 버튼
     submitBtn.addEventListener('click', function() {
         createPost();
@@ -322,56 +313,6 @@ document.addEventListener('DOMContentLoaded', async function() {
         page_location: window.location.href
     });
 });
-
-// 무한 스크롤 설정
-function setupInfiniteScroll() {
-    let ticking = false;
-    
-    window.addEventListener('scroll', function() {
-        if (!ticking) {
-            requestAnimationFrame(function() {
-                checkScrollPosition();
-                ticking = false;
-            });
-            ticking = true;
-        }
-    });
-}
-
-// 스크롤 위치 확인 및 다음 페이지 로드
-function checkScrollPosition() {
-    // 홈페이지에서만 무한 스크롤 작동
-    if (currentPage !== 'home' || isLoading || !hasMorePosts) {
-        return;
-    }
-    
-    const posts = document.querySelectorAll('.post');
-    const currentPostsCount = posts.length;
-    
-    // 15번째 글 기준으로 체크 (0부터 시작하므로 index 14)
-    if (currentPostsCount >= 15) {
-        const fifteenthPost = posts[14];
-        const rect = fifteenthPost.getBoundingClientRect();
-        const windowHeight = window.innerHeight;
-        
-        // 15번째 글이 화면에 보이면 다음 페이지 로드
-        if (rect.top <= windowHeight && rect.bottom >= 0) {
-            console.log('15번째 글이 화면에 보임, 다음 페이지 로드 시작');
-            loadMorePosts();
-        }
-    }
-    
-    // 추가적으로 스크롤이 끝까지 내려갔을 때도 체크 (백업)
-    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-    const windowHeight = window.innerHeight;
-    const documentHeight = document.documentElement.scrollHeight;
-    
-    // 스크롤이 끝에서 100px 이내에 있으면 다음 페이지 로드
-    if (scrollTop + windowHeight >= documentHeight - 100) {
-        console.log('스크롤이 페이지 끝에 도달, 다음 페이지 로드 시작');
-        loadMorePosts();
-    }
-}
 
 // 이전 버전과의 호환성을 위한 함수들 (라우터로 대체됨)
 function showHomePage() {
@@ -421,137 +362,44 @@ async function createPost() {
         });
         
         router.navigateTo('/');
-        // 새 글 작성 후 첫 페이지 다시 로드
-        loadPostsFromFirebase(true);
+        loadPostsFromFirebase(); // 새로고침
     } catch (error) {
         console.error('Lưu bài viết thất bại:', error);
         alert('Lưu bài viết thất bại.');
     }
 }
 
-// 첫 페이지 로드 (초기 20개)
-async function loadPostsFromFirebase(isInitial = true) {
-    if (isLoading || (!hasMorePosts && !isInitial)) {
-        return;
-    }
-    
+async function loadPostsFromFirebase() {
     try {
-        isLoading = true;
-        showLoadingIndicator();
+        console.log('Firebase에서 posts 로드 시작...');
         
-        console.log('Firebase에서 posts 로드 시작... (페이지네이션)');
-        
-        let postsQuery;
+        // orderBy 없이 모든 문서를 가져온 후 클라이언트에서 정렬
         const postsRef = window.firestore.collection(window.db, 'posts');
+        const querySnapshot = await window.firestore.getDocs(postsRef);
         
-        if (isInitial) {
-            // 첫 페이지: 최신 글부터 20개
-            posts = []; // 기존 글 목록 초기화
-            lastPostDoc = null;
-            hasMorePosts = true;
-            
-            postsQuery = window.firestore.query(
-                postsRef,
-                window.firestore.orderBy('date', 'desc'),
-                window.firestore.limit(POSTS_PER_PAGE)
-            );
-        } else {
-            // 다음 페이지: 마지막 문서 이후부터 20개
-            if (!lastPostDoc) {
-                hideLoadingIndicator();
-                isLoading = false;
-                return;
-            }
-            
-            postsQuery = window.firestore.query(
-                postsRef,
-                window.firestore.orderBy('date', 'desc'),
-                window.firestore.startAfter(lastPostDoc),
-                window.firestore.limit(POSTS_PER_PAGE)
-            );
-        }
-        
-        const querySnapshot = await window.firestore.getDocs(postsQuery);
         console.log('Firebase 쿼리 완료. 문서 개수:', querySnapshot.size);
+        posts = [];
         
-        if (querySnapshot.empty) {
-            hasMorePosts = false;
-            hideLoadingIndicator();
-            isLoading = false;
-            return;
-        }
-        
-        const newPosts = [];
         querySnapshot.forEach((doc) => {
             const data = doc.data();
             console.log('로드된 문서 ID:', doc.id, '제목:', data.title);
-            newPosts.push({
+            posts.push({
                 id: doc.id,
                 ...data,
                 date: data.date // 원본 날짜 형식 유지
             });
         });
         
-        // 마지막 문서 저장 (다음 페이지 로드용)
-        lastPostDoc = querySnapshot.docs[querySnapshot.docs.length - 1];
+        // 클라이언트에서 날짜순 정렬 (최신 글부터)
+        posts.sort((a, b) => new Date(b.date) - new Date(a.date));
         
-        // 새 글들을 기존 목록에 추가
-        posts = [...posts, ...newPosts];
-        
-        // 20개보다 적게 로드되면 더 이상 글이 없음
-        if (newPosts.length < POSTS_PER_PAGE) {
-            hasMorePosts = false;
-        }
-        
-        console.log('posts 로드 완료:', posts.length, '개 (새로 추가:', newPosts.length, '개)');
-        
-        if (isInitial) {
-            renderPosts();
-        } else {
-            appendPosts(newPosts);
-        }
-        
+        console.log('메인 페이지 posts 로드 완료:', posts.length, '개');
+        renderPosts();
     } catch (error) {
         console.error('Tải dữ liệu thất bại:', error);
         console.error('에러 상세:', error.code, error.message);
-        
-        if (isInitial) {
-            // 초기 로드 실패 시에만 샘플 데이터 로드
-            loadSamplePosts();
-        }
-    } finally {
-        hideLoadingIndicator();
-        isLoading = false;
-    }
-}
-
-// 다음 페이지 로드
-async function loadMorePosts() {
-    await loadPostsFromFirebase(false);
-}
-
-// 로딩 인디케이터 표시
-function showLoadingIndicator() {
-    let indicator = document.getElementById('loadingIndicator');
-    if (!indicator) {
-        indicator = document.createElement('div');
-        indicator.id = 'loadingIndicator';
-        indicator.innerHTML = `
-            <div style="text-align: center; padding: 20px;">
-                <div class="loading-spinner" style="margin: 0 auto 10px; width: 30px; height: 30px; border: 3px solid #f3f3f3; border-top: 3px solid #333; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                <p style="color: #666;">Đang tải thêm bài viết...</p>
-            </div>
-        `;
-        document.getElementById('posts').appendChild(indicator);
-    }
-    indicator.style.display = 'block';
-}
-
-// 로딩 인디케이터 숨기기
-function hideLoadingIndicator() {
-    const indicator = document.getElementById('loadingIndicator');
-    if (indicator) {
-        indicator.style.display = 'none';
+        // 실패 시 샘플 데이터 로드
+        loadSamplePosts();
     }
 }
 
@@ -560,53 +408,38 @@ function renderPosts() {
     postsContainer.innerHTML = '';
 
     posts.forEach(post => {
-        appendSinglePost(post, postsContainer);
-    });
-}
-
-// 새 글들을 기존 목록에 추가 (무한 스크롤용)
-function appendPosts(newPosts) {
-    const postsContainer = document.getElementById('posts');
-    
-    newPosts.forEach(post => {
-        appendSinglePost(post, postsContainer);
-    });
-}
-
-// 단일 글을 컨테이너에 추가
-function appendSinglePost(post, container) {
-    const postElement = document.createElement('div');
-    postElement.className = 'post';
-    postElement.setAttribute('data-post-index', posts.indexOf(post));
-    
-    postElement.innerHTML = `
-        <div class="post-header">
-            <div class="post-author">
-                <div class="author-avatar">
-                    ${post.author.charAt(0)}
-                </div>
-                <div class="author-info">
-                    <div class="author-name">${post.author}</div>
-                    <div class="post-date">${formatPostDate(post.date)}</div>
+        const postElement = document.createElement('div');
+        postElement.className = 'post';
+        
+        postElement.innerHTML = `
+            <div class="post-header">
+                <div class="post-author">
+                    <div class="author-avatar">
+                        ${post.author.charAt(0)}
+                    </div>
+                    <div class="author-info">
+                        <div class="author-name">${post.author}</div>
+                        <div class="post-date">${formatPostDate(post.date)}</div>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="post-content-area" onclick="router.navigateTo('/post/${post.id}')">
-            <div class="post-title">${post.title}</div>
-            <div class="post-content">${post.content}</div>
-        </div>
-        <div class="post-stats">
-            <div class="stat-item like-btn ${post.liked ? 'liked' : ''}" onclick="event.stopPropagation(); toggleLikeFromList('${post.id}')">
-                <span>${post.liked ? '❤️' : '♡'}</span>
-                <span>${post.likes}</span>
+            <div class="post-content-area" onclick="router.navigateTo('/post/${post.id}')">
+                <div class="post-title">${post.title}</div>
+                <div class="post-content">${post.content}</div>
             </div>
-            <div class="stat-item" onclick="router.navigateTo('/post/${post.id}')">
-                <span>💬</span>
-                <span>${post.comments ? post.comments.length : 0}</span>
+            <div class="post-stats">
+                <div class="stat-item like-btn ${post.liked ? 'liked' : ''}" onclick="event.stopPropagation(); toggleLikeFromList('${post.id}')">
+                    <span>${post.liked ? '❤️' : '♡'}</span>
+                    <span>${post.likes}</span>
+                </div>
+                <div class="stat-item" onclick="router.navigateTo('/post/${post.id}')">
+                    <span>💬</span>
+                    <span>${post.comments ? post.comments.length : 0}</span>
+                </div>
             </div>
-        </div>
-    `;
-    container.appendChild(postElement);
+        `;
+        postsContainer.appendChild(postElement);
+    });
 }
 
 async function toggleLikeFromList(postId) {

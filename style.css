@@ -263,7 +263,7 @@ body {
 .detail-content {
     flex: 1;
     overflow-y: auto;
-    padding-bottom: 150px;
+    padding-bottom: 80px; /* 댓글 입력창 공간 확보 */
 }
 
 .post-detail {
@@ -292,8 +292,17 @@ body {
     overflow: visible;
 }
 
-/* 댓글 영역 고정 */
-.comment-section-fixed {
+/* 액션 버튼 바 (제목 아래에 위치) */
+.post-actions-bar {
+    display: flex;
+    padding: 12px 20px;
+    border-bottom: 1px solid #eee;
+    background: white;
+    margin-bottom: 20px;
+}
+
+/* 댓글 입력창만 하단 고정 */
+.comment-input-fixed {
     position: fixed;
     bottom: 0;
     left: 0;
@@ -301,13 +310,6 @@ body {
     background: white;
     border-top: 1px solid #eee;
     z-index: 100;
-}
-
-.post-actions-bar {
-    display: flex;
-    padding: 12px 20px;
-    border-bottom: 1px solid #eee;
-    background: white;
 }
 
 .post-actions-bar .action-btn {
@@ -337,9 +339,7 @@ body {
 }
 
 .comments-list {
-    max-height: 200px;
-    overflow-y: auto;
-    padding: 12px 20px;
+    padding: 0 20px 20px 20px;
 }
 
 .comment {

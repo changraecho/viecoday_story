@@ -682,13 +682,22 @@ function shareToFacebook() {
     window.open(`https://www.facebook.com/sharer/sharer.php?u=${url}&quote=${text}`, '_blank');
 }
 
-function shareToTwitter() {
+function shareToZalo() {
     const postId = document.getElementById('shareModal').getAttribute('data-post-id');
     const post = posts.find(p => p.id == postId);
     const postUrl = `${window.location.origin}/post/${postId}`;
-    const url = encodeURIComponent(postUrl);
-    const text = encodeURIComponent(`${post.title} - ${post.content.substring(0, 100)}...`);
-    window.open(`https://twitter.com/intent/tweet?url=${url}&text=${text}`, '_blank');
+    
+    // Zalo 공유 URL 구성
+    const shareUrl = `https://zalo.me/share/url?url=${encodeURIComponent(postUrl)}&title=${encodeURIComponent(post.title)}&desc=${encodeURIComponent(post.content.substring(0, 100) + '...')}`;
+    
+    // 모바일에서는 Zalo 앱으로, 데스크톱에서는 웹으로 공유
+    if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        // 모바일: Zalo 앱 실행 시도
+        window.location.href = shareUrl;
+    } else {
+        // 데스크톱: 새 창에서 열기
+        window.open(shareUrl, '_blank', 'width=600,height=400');
+    }
 }
 
 function copyLink() {

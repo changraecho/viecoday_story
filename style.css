@@ -4,6 +4,12 @@
     box-sizing: border-box;
 }
 
+/* 로딩 스피너 애니메이션 */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 body {
     font-family: 'Arial', sans-serif;
     background-color: #ffffff;

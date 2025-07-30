@@ -87,9 +87,17 @@ class Router {
         document.querySelector('.container').style.display = 'none';
         document.getElementById('floatingBtn').style.display = 'none';
         
+        // 로딩 상태 표시
+        this.showPostDetailLoading();
+        
         // 글이 로드되기를 기다린 후 렌더링
         if (posts.length > 0) {
-            renderPostDetail(postId);
+            const post = posts.find(p => p.id === postId);
+            if (post) {
+                renderPostDetail(postId);
+            } else {
+                this.showPostNotFound();
+            }
         } else {
             // 글이 아직 로드되지 않았으면 로드 후 렌더링
             this.waitForPostsAndRender(postId);
@@ -104,14 +112,76 @@ class Router {
         });
     }
 
+    showPostDetailLoading() {
+        const postDetailElement = document.getElementById('postDetail');
+        postDetailElement.innerHTML = `
+            <div class="loading-container" style="text-align: center; padding: 40px;">
+                <div class="loading-spinner" style="margin: 20px auto; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #333; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p>Đang tải bài viết...</p>
+            </div>
+        `;
+        
+        // 액션 버튼들 비활성화
+        const likeBtn = document.getElementById('detailLikeBtn');
+        const commentBtn = document.getElementById('detailCommentBtn');
+        const shareBtn = document.getElementById('detailShareBtn');
+        
+        if (likeBtn) likeBtn.style.display = 'none';
+        if (commentBtn) commentBtn.style.display = 'none';
+        if (shareBtn) shareBtn.style.display = 'none';
+        
+        // 댓글 섹션 숨기기
+        const commentsList = document.getElementById('detailCommentsList');
+        const commentInput = document.getElementById('commentInput');
+        const commentSubmit = document.getElementById('commentSubmitBtn');
+        
+        if (commentsList) commentsList.innerHTML = '';
+        if (commentInput) commentInput.style.display = 'none';
+        if (commentSubmit) commentSubmit.style.display = 'none';
+    }
+
+    showPostNotFound() {
+        const postDetailElement = document.getElementById('postDetail');
+        postDetailElement.innerHTML = `
+            <div class="not-found-container" style="text-align: center; padding: 40px;">
+                <h2>Không tìm thấy bài viết</h2>
+                <p>Bài viết này có thể đã bị xóa hoặc không tồn tại.</p>
+                <button onclick="router.navigateTo('/')" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Về trang chủ</button>
+            </div>
+        `;
+        
+        // 액션 버튼들 숨기기
+        const likeBtn = document.getElementById('detailLikeBtn');
+        const commentBtn = document.getElementById('detailCommentBtn');
+        const shareBtn = document.getElementById('detailShareBtn');
+        
+        if (likeBtn) likeBtn.style.display = 'none';
+        if (commentBtn) commentBtn.style.display = 'none';
+        if (shareBtn) shareBtn.style.display = 'none';
+        
+        // 댓글 섹션 숨기기
+        const commentsList = document.getElementById('detailCommentsList');
+        const commentInput = document.getElementById('commentInput');
+        const commentSubmit = document.getElementById('commentSubmitBtn');
+        
+        if (commentsList) commentsList.innerHTML = '';
+        if (commentInput) commentInput.style.display = 'none';
+        if (commentSubmit) commentSubmit.style.display = 'none';
+    }
+
     async waitForPostsAndRender(postId) {
-        // 최대 5초 동안 글 로드를 기다림
+        // 최대 10초 동안 글 로드를 기다림
         let attempts = 0;
-        const maxAttempts = 50;
+        const maxAttempts = 100;
         
         const checkPosts = () => {
             if (posts.length > 0) {
-                renderPostDetail(postId);
+                const post = posts.find(p => p.id === postId);
+                if (post) {
+                    renderPostDetail(postId);
+                } else {
+                    this.showPostNotFound();
+                }
                 return;
             }
             
@@ -119,8 +189,8 @@ class Router {
             if (attempts < maxAttempts) {
                 setTimeout(checkPosts, 100);
             } else {
-                // 글을 찾을 수 없으면 홈으로 리다이렉트
-                this.navigateTo('/');
+                // 타임아웃 시 "찾을 수 없음" 표시
+                this.showPostNotFound();
             }
         };
         
@@ -409,7 +479,12 @@ async function toggleLikeFromList(postId) {
 
 function renderPostDetail(postId) {
     const post = posts.find(p => p.id === postId);
-    if (!post) return;
+    if (!post) {
+        if (router) {
+            router.showPostNotFound();
+        }
+        return;
+    }
 
     const postDetailElement = document.getElementById('postDetail');
     postDetailElement.innerHTML = `
@@ -428,24 +503,39 @@ function renderPostDetail(postId) {
         <div class="post-content">${post.content}</div>
     `;
 
-    // 액션 버튼 업데이트
+    // 액션 버튼 업데이트 및 표시
     const likeBtn = document.getElementById('detailLikeBtn');
     const commentBtn = document.getElementById('detailCommentBtn');
     const shareBtn = document.getElementById('detailShareBtn');
+    const commentInput = document.getElementById('commentInput');
+    const commentSubmit = document.getElementById('commentSubmitBtn');
 
-    likeBtn.innerHTML = `
-        <span class="icon">${post.liked ? '❤️' : '♡'}</span>
-        <span class="count">${post.likes}</span>
-    `;
-    likeBtn.className = `action-btn ${post.liked ? 'liked' : ''}`;
-    likeBtn.onclick = () => toggleDetailLike(postId);
+    if (likeBtn) {
+        likeBtn.innerHTML = `
+            <span class="icon">${post.liked ? '❤️' : '♡'}</span>
+            <span class="count">${post.likes}</span>
+        `;
+        likeBtn.className = `action-btn ${post.liked ? 'liked' : ''}`;
+        likeBtn.onclick = () => toggleDetailLike(postId);
+        likeBtn.style.display = 'flex';
+    }
 
-    commentBtn.innerHTML = `
-        <span class="icon">💬</span>
-        <span class="count">${post.comments ? post.comments.length : 0}</span>
-    `;
+    if (commentBtn) {
+        commentBtn.innerHTML = `
+            <span class="icon">💬</span>
+            <span class="count">${post.comments ? post.comments.length : 0}</span>
+        `;
+        commentBtn.style.display = 'flex';
+    }
 
-    shareBtn.onclick = () => openShareModal(postId);
+    if (shareBtn) {
+        shareBtn.onclick = () => openShareModal(postId);
+        shareBtn.style.display = 'flex';
+    }
+
+    // 댓글 입력 필드 표시
+    if (commentInput) commentInput.style.display = 'block';
+    if (commentSubmit) commentSubmit.style.display = 'block';
 
     // 댓글 목록 렌더링
     renderDetailComments(post.comments || []);

@@ -1,5 +1,6 @@
 // Firebase 설정 파일
 // Firebase Console에서 복사한 설정 정보를 여기에 붙여넣으세요
+// Updated: Ensure consistent database across all deployments
 
 const firebaseConfig = {
   apiKey: "AIzaSyDkizkARVKF2K8cYoDsmp90t9fAYnBteMc",

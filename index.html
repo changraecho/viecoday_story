@@ -24,12 +24,12 @@
     <div id="writePage" class="page" style="display: none;">
         <div class="page-header">
             <button class="back-btn" id="backBtn">←</button>
-            <h2>새 글 작성</h2>
-            <button class="submit-btn" id="submitBtn">완료</button>
+            <h2>Viết bài mới</h2>
+            <button class="submit-btn" id="submitBtn">Hoàn thành</button>
         </div>
         <div class="write-form">
-            <input type="text" id="postTitle" placeholder="제목을 입력하세요" required>
-            <textarea id="postContent" placeholder="내용을 입력하세요" required></textarea>
+            <input type="text" id="postTitle" placeholder="Nhập tiêu đề" required>
+            <textarea id="postContent" placeholder="Nhập nội dung" required></textarea>
         </div>
     </div>
 
@@ -37,8 +37,6 @@
     <div id="detailPage" class="page" style="display: none;">
         <div class="page-header">
             <button class="back-btn" id="detailBackBtn">←</button>
-            <h2>글 상세</h2>
-            <button class="menu-btn">⋯</button>
         </div>
         <div class="detail-content">
             <div class="post-detail" id="postDetail"></div>
@@ -55,13 +53,13 @@
                 </button>
                 <button class="action-btn" id="detailShareBtn">
                     <span class="icon">📤</span>
-                    <span>공유하기</span>
+                    <span>Chia sẻ</span>
                 </button>
             </div>
             <div class="comments-list" id="detailCommentsList"></div>
             <div class="comment-input-area">
-                <input type="text" id="commentInput" placeholder="댓글을 남겨보세요...">
-                <button id="commentSubmitBtn">게시</button>
+                <input type="text" id="commentInput" placeholder="Để lại bình luận...">
+                <button id="commentSubmitBtn">Đăng</button>
             </div>
         </div>
     </div>
@@ -70,11 +68,11 @@
     <div id="shareModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h3>공유하기</h3>
+            <h3>Chia sẻ</h3>
             <div class="share-buttons">
                 <button onclick="shareToFacebook()">Facebook</button>
                 <button onclick="shareToTwitter()">Twitter</button>
-                <button onclick="copyLink()">링크 복사</button>
+                <button onclick="copyLink()">Sao chép liên kết</button>
             </div>
         </div>
     </div>

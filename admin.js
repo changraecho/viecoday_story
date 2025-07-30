@@ -570,13 +570,22 @@ class AdminPanel {
                     await window.firestore.deleteDoc(
                         window.firestore.doc(window.db, 'posts', postId)
                     );
-                    console.log('Firebase에서 글 삭제 완료');
+                    console.log('Firebase에서 글 삭제 완료:', postId);
                     
-                    // 글 목록 다시 로드
-                    await this.loadPosts();
+                    // 로컬 배열에서도 즉시 제거
+                    this.posts = this.posts.filter(post => post.id !== postId);
+                    this.filteredPosts = this.filteredPosts.filter(post => post.id !== postId);
+                    
+                    // UI 즉시 업데이트
+                    this.updateDisplay();
+                    
+                    // Firebase에서 다시 로드하여 동기화 확인
+                    setTimeout(async () => {
+                        await this.loadPosts();
+                    }, 500);
                 } else {
-                    // Firebase가 없으면 기존 방식 (현재는 Firebase 필수이므로 이 코드는 사용되지 않음)
                     console.log('Firebase가 필요합니다.');
+                    alert('Firebase 연결이 필요합니다.');
                 }
                 
                 this.selectedPosts.delete(postId);
@@ -678,24 +687,28 @@ class AdminPanel {
 
     formatDate(dateValue) {
         try {
-            if (!dateValue) return '날짜 없음';
+            if (!dateValue) return 'Không có ngày';
             
             // Firebase Timestamp인 경우
             if (dateValue && dateValue.toDate) {
-                return dateValue.toDate().toLocaleString('ko-KR');
+                return dateValue.toDate().toLocaleString('vi-VN', {
+                    timeZone: 'Asia/Ho_Chi_Minh'
+                });
             }
             
             // 문자열이나 다른 형태인 경우
             const dateObj = new Date(dateValue);
             if (!isNaN(dateObj.getTime())) {
-                return dateObj.toLocaleString('ko-KR');
+                return dateObj.toLocaleString('vi-VN', {
+                    timeZone: 'Asia/Ho_Chi_Minh'
+                });
             }
             
             // 모든 변환이 실패한 경우
             return dateValue.toString();
         } catch (error) {
             console.error('날짜 포맷 오류:', error, dateValue);
-            return '날짜 오류';
+            return 'Lỗi ngày';
         }
     }
 

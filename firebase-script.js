@@ -25,27 +25,31 @@ function logAnalyticsEvent(eventName, parameters = {}) {
     }
 }
 
-// 날짜 포맷팅 함수
+// 날짜 포맷팅 함수 (베트남 시간대)
 function formatPostDate(dateValue) {
     try {
-        if (!dateValue) return '날짜 없음';
+        if (!dateValue) return 'Không có ngày';
         
         // Firebase Timestamp인 경우
         if (dateValue && dateValue.toDate) {
-            return dateValue.toDate().toLocaleString('ko-KR');
+            return dateValue.toDate().toLocaleString('vi-VN', {
+                timeZone: 'Asia/Ho_Chi_Minh'
+            });
         }
         
         // 문자열이나 다른 형태인 경우
         const dateObj = new Date(dateValue);
         if (!isNaN(dateObj.getTime())) {
-            return dateObj.toLocaleString('ko-KR');
+            return dateObj.toLocaleString('vi-VN', {
+                timeZone: 'Asia/Ho_Chi_Minh'
+            });
         }
         
         // 모든 변환이 실패한 경우
         return dateValue.toString();
     } catch (error) {
         console.error('날짜 포맷 오류:', error, dateValue);
-        return '날짜 오류';
+        return 'Lỗi ngày';
     }
 }
 
@@ -160,14 +164,14 @@ async function createPost() {
     const content = document.getElementById('postContent').value;
     
     if (title.trim() === '' || content.trim() === '') {
-        alert('제목과 내용을 모두 입력해주세요.');
+        alert('Vui lòng nhập cả tiêu đề và nội dung.');
         return;
     }
 
     const post = {
         title: title,
         content: content,
-        author: '익명',
+        author: 'Ẩn danh',
         date: new Date().toISOString(),
         likes: 0,
         liked: false,
@@ -192,8 +196,8 @@ async function createPost() {
         showHomePage();
         loadPostsFromFirebase(); // 새로고침
     } catch (error) {
-        console.error('글 저장 실패:', error);
-        alert('글 저장에 실패했습니다.');
+        console.error('Lưu bài viết thất bại:', error);
+        alert('Lưu bài viết thất bại.');
     }
 }
 
@@ -224,7 +228,7 @@ async function loadPostsFromFirebase() {
         console.log('메인 페이지 posts 로드 완료:', posts.length, '개');
         renderPosts();
     } catch (error) {
-        console.error('데이터 로드 실패:', error);
+        console.error('Tải dữ liệu thất bại:', error);
         console.error('에러 상세:', error.code, error.message);
         // 실패 시 샘플 데이터 로드
         loadSamplePosts();
@@ -300,7 +304,7 @@ async function toggleLikeFromList(postId) {
             
             renderPosts();
         } catch (error) {
-            console.error('좋아요 업데이트 실패:', error);
+            console.error('Cập nhật thích thất bại:', error);
         }
     }
 }
@@ -354,13 +358,13 @@ function renderDetailComments(comments) {
     commentsList.innerHTML = comments.map(comment => `
         <div class="comment">
             <div class="comment-header">
-                <span class="comment-author">익명</span>
+                <span class="comment-author">Ẩn danh</span>
                 <span class="comment-date">${formatPostDate(comment.date)}</span>
             </div>
             <div class="comment-content">${comment.content}</div>
             <div class="comment-actions">
                 <button class="comment-like-btn ${comment.liked ? 'liked' : ''}" onclick="toggleCommentLike('${comment.postId}', '${comment.id}')">
-                    <span>좋아요</span>
+                    <span>Thích</span>
                     <span>${comment.likes}</span>
                 </button>
             </div>
@@ -390,7 +394,7 @@ async function toggleDetailLike(postId) {
             renderPosts();
             renderPostDetail(postId);
         } catch (error) {
-            console.error('좋아요 업데이트 실패:', error);
+            console.error('Cập nhật thích thất bại:', error);
         }
     }
 }
@@ -400,7 +404,7 @@ async function addCommentToDetail() {
     const commentContent = commentInput.value.trim();
     
     if (commentContent === '') {
-        alert('댓글 내용을 입력해주세요.');
+        alert('Vui lòng nhập nội dung bình luận.');
         return;
     }
 
@@ -438,7 +442,7 @@ async function addCommentToDetail() {
         renderPosts();
         renderPostDetail(currentPostId);
     } catch (error) {
-        console.error('댓글 저장 실패:', error);
+        console.error('Lưu bình luận thất bại:', error);
     }
 }
 
@@ -467,10 +471,10 @@ function shareToTwitter() {
 function copyLink() {
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(() => {
-        alert('링크가 복사되었습니다!');
+        alert('Liên kết đã được sao chép!');
         document.getElementById('shareModal').style.display = 'none';
     }).catch(() => {
-        alert('링크 복사에 실패했습니다.');
+        alert('Sao chép liên kết thất bại.');
     });
 }
 
@@ -479,9 +483,9 @@ function loadSamplePosts() {
     const samplePosts = [
         {
             id: 'sample1',
-            title: "Firebase 연결 중...",
-            content: "Firebase 데이터베이스에 연결하는 중입니다. 잠시만 기다려주세요.",
-            author: "시스템",
+            title: "Đang kết nối Firebase...",
+            content: "Đang kết nối với cơ sở dữ liệu Firebase. Vui lòng chờ trong giây lát.",
+            author: "Hệ thống",
             date: new Date().toISOString(),
             likes: 0,
             liked: false,

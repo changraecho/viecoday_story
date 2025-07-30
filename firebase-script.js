@@ -16,11 +16,13 @@ class Router {
     }
 
     init() {
-        // 페이지 로드 시 현재 URL 처리
-        window.addEventListener('load', () => this.handleRoute());
-        
         // 브라우저 뒤로가기/앞으로가기 처리
         window.addEventListener('popstate', () => this.handleRoute());
+    }
+
+    // 라우터 초기화 (Firebase 로드 후 호출)
+    initializeRouting() {
+        this.handleRoute();
     }
 
     handleRoute() {
@@ -58,6 +60,12 @@ class Router {
         // URL 업데이트
         if (window.location.pathname !== '/') {
             window.history.replaceState({}, '', '/');
+        }
+        
+        // 홈페이지에서 글이 없으면 다시 로드 시도
+        if (posts.length === 0) {
+            console.log('홈페이지에서 글이 없어서 Firebase 재로드 시도');
+            loadPostsFromFirebase();
         }
     }
 
@@ -170,31 +178,25 @@ class Router {
     }
 
     async waitForPostsAndRender(postId) {
-        // 최대 10초 동안 글 로드를 기다림
-        let attempts = 0;
-        const maxAttempts = 100;
+        // Firebase에서 다시 데이터를 로드해보기
+        console.log('글 데이터가 없어서 Firebase에서 다시 로드 시도:', postId);
         
-        const checkPosts = () => {
-            if (posts.length > 0) {
-                const post = posts.find(p => p.id === postId);
-                if (post) {
-                    renderPostDetail(postId);
-                } else {
-                    this.showPostNotFound();
-                }
-                return;
-            }
+        try {
+            await loadPostsFromFirebase();
             
-            attempts++;
-            if (attempts < maxAttempts) {
-                setTimeout(checkPosts, 100);
+            // 로드 후 다시 체크
+            const post = posts.find(p => p.id === postId);
+            if (post) {
+                console.log('Firebase 재로드 후 글 찾음:', post.title);
+                renderPostDetail(postId);
             } else {
-                // 타임아웃 시 "찾을 수 없음" 표시
+                console.log('Firebase 재로드 후에도 글을 찾을 수 없음:', postId);
                 this.showPostNotFound();
             }
-        };
-        
-        checkPosts();
+        } catch (error) {
+            console.error('Firebase 재로드 실패:', error);
+            this.showPostNotFound();
+        }
     }
 }
 
@@ -305,7 +307,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         }
     });
 
-    loadPostsFromFirebase();
+    // Firebase 데이터 로드 후 라우팅 처리
+    await loadPostsFromFirebase();
+    
+    // 데이터 로드 완료 후 라우터 초기화
+    router.initializeRouting();
     
     // 페이지 방문 이벤트 로깅
     logAnalyticsEvent('page_view', {

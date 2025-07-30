@@ -574,6 +574,72 @@ function renderPostDetail(postId) {
     console.log('renderPostDetail: 댓글 목록 렌더링 완료');
 }
 
+// 댓글 좋아요 토글 함수
+async function toggleCommentLike(postId, commentId) {
+    console.log('댓글 좋아요 토글:', postId, commentId);
+    
+    const post = posts.find(p => p.id === postId);
+    if (!post || !post.comments) {
+        console.error('댓글을 찾을 수 없음:', postId, commentId);
+        return;
+    }
+    
+    const comment = post.comments.find(c => c.id === commentId);
+    if (!comment) {
+        console.error('해당 댓글을 찾을 수 없음:', commentId);
+        return;
+    }
+    
+    // 좋아요 상태 토글
+    if (comment.liked) {
+        comment.likes = Math.max(0, comment.likes - 1);
+        comment.liked = false;
+        console.log('댓글 좋아요 취소:', comment.likes);
+    } else {
+        comment.likes++;
+        comment.liked = true;
+        console.log('댓글 좋아요 추가:', comment.likes);
+    }
+    
+    try {
+        // Firebase 업데이트
+        await window.firestore.updateDoc(
+            window.firestore.doc(window.db, 'posts', postId),
+            {
+                comments: post.comments
+            }
+        );
+        
+        console.log('Firebase 댓글 좋아요 업데이트 완료');
+        
+        // UI 즉시 업데이트
+        renderDetailComments(post.comments);
+        
+        // 댓글 수도 업데이트 (좋아요는 댓글 수에 영향 없음)
+        const commentBtn = document.getElementById('detailCommentBtn');
+        if (commentBtn) {
+            commentBtn.innerHTML = `
+                <span class="icon">💬</span>
+                <span class="count">${post.comments.length}</span>
+            `;
+        }
+        
+    } catch (error) {
+        console.error('댓글 좋아요 업데이트 실패:', error);
+        
+        // 실패 시 원래 상태로 복원
+        if (comment.liked) {
+            comment.likes = Math.max(0, comment.likes - 1);
+            comment.liked = false;
+        } else {
+            comment.likes++;
+            comment.liked = true;
+        }
+        
+        alert('좋아요 업데이트에 실패했습니다.');
+    }
+}
+
 function renderDetailComments(comments) {
     const commentsList = document.getElementById('detailCommentsList');
     commentsList.innerHTML = comments.map(comment => `

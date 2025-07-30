@@ -496,25 +496,32 @@ body {
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s;
+    color: white;
+    font-weight: bold;
 }
 
 .share-buttons button:nth-child(1) {
-    background: #3b5998;
-    color: white;
+    background: #1877f2; /* Facebook 파란색 */
+}
+
+.share-buttons button:nth-child(1):hover {
+    background: #166fe5;
 }
 
 .share-buttons button:nth-child(2) {
-    background: #1da1f2;
-    color: white;
+    background: #0068FF; /* Zalo 파란색 */
+}
+
+.share-buttons button:nth-child(2):hover {
+    background: #005ce6;
 }
 
 .share-buttons button:nth-child(3) {
-    background: #666;
-    color: white;
+    background: #666; /* 링크 복사 회색 */
 }
 
-.share-buttons button:hover {
-    opacity: 0.8;
+.share-buttons button:nth-child(3):hover {
+    background: #555;
 }
 
 @media (max-width: 768px) {

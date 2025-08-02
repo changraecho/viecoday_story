@@ -1,14 +1,24 @@
-# Viecoday Story - AI 기반 커뮤니티 플랫폼
+# Viecoday Story - 베트남 커뮤니티 플랫폼
 
-한국어 커뮤니티를 위한 AI 기반 컨텐츠 생성 플랫폼입니다.
+베트남 사용자를 위한 AI 기반 커뮤니티 플랫폼입니다.
 
 ## 🌟 주요 기능
 
 ### 📝 커뮤니티 기능
 - 실시간 글 작성 및 공유
-- 댓글 및 좋아요 시스템
+- 댓글 및 좋아요 시스템 (개별 댓글 좋아요 포함)
+- 개별 글 URL 공유 기능 (/post/[id] 라우팅)
 - 반응형 모바일 UI
 - Firebase 실시간 데이터베이스
+- 베트남 현지화 (시간대, 언어)
+
+### 🎨 UI/UX 기능
+- **50px 통일 헤더** (홈, 글상세, 글작성 페이지)
+- **하단 탭바** (60px 높이, 5개 아이콘)
+  - 홈, 브랜드관, 좋아요목록, 커뮤니티, 마이메뉴
+- **공유 기능**: Facebook 공유, 링크 복사
+- **베트남어 인터페이스**: 완전 현지화
+- **베트남 시간대**: Asia/Ho_Chi_Minh
 
 ### 🤖 AI 컨텐츠 봇
 - **DeepSeek API 연동**으로 고품질 한국어 컨텐츠 생성
@@ -33,31 +43,70 @@ viecoday_story/
 ├── style.css               # 메인 스타일
 ├── admin.css               # 관리자 스타일
 ├── firebase-config.js      # Firebase 설정
-├── firebase-script.js      # Firebase 연동
+├── firebase-script.js      # Firebase 연동 & 라우팅
 ├── content-bot.js          # AI 컨텐츠 봇
 ├── deepseek-api.js         # DeepSeek API 연동
 ├── admin.js                # 관리자 패널 로직
+├── vercel.json             # Vercel SPA 설정
+├── icons/                  # 네비게이션 아이콘
+│   ├── home_icon.png
+│   ├── brand_icon.png
+│   ├── like_icon.png
+│   ├── community_icon.png
+│   └── mymenu_icon.png
 └── README.md               # 프로젝트 문서
 ```
 
-## 🚀 설치 및 실행
+## 🚀 배포 정보
 
-### 1. Firebase 설정
-1. [Firebase Console](https://console.firebase.google.com/)에서 새 프로젝트 생성
-2. Firestore Database 활성화
-3. Google Analytics 연동
-4. `firebase-config.js`에 설정 정보 입력
+### 라이브 URL
+- **커뮤니티**: https://viecoday-story.vercel.app/
+- **관리자**: https://viecoday-story.vercel.app/admin.html
 
-### 2. DeepSeek API 설정
-1. [DeepSeek](https://api.deepseek.com/)에서 API 키 발급
-2. 관리자 패널 → API 설정 → API 키 입력
+### 네비게이션 연결
+- **홈**: https://www.viecoday.com/
+- **브랜드관**: https://www.viecoday.com/brand
+- **좋아요목록**: https://www.viecoday.com/favorite
+- **커뮤니티**: https://viecoday-story.vercel.app/
+- **마이메뉴**: https://www.viecoday.com/mypage
 
-### 3. 로컬 서버 실행
-```bash
-# 간단한 HTTP 서버 실행
-python -m http.server 8000
-# 또는
-npx serve .
+## 🛠️ 기술 스택
+
+- **Frontend**: HTML5, CSS3, Vanilla JavaScript
+- **Backend**: Firebase Firestore
+- **AI**: DeepSeek API
+- **Analytics**: Google Analytics
+- **Deployment**: Vercel
+- **Routing**: SPA 라우팅 (History API)
+
+## 🎯 핵심 기능 설명
+
+### 라우팅 시스템
+```javascript
+// URL 구조
+/ → 홈페이지 (글 목록)
+/write → 글 작성 페이지
+/post/[id] → 개별 글 상세 페이지
+```
+
+### 베트남 현지화
+- **시간대**: Asia/Ho_Chi_Minh
+- **언어**: 베트남어 UI
+- **날짜 형식**: vi-VN 로케일
+
+### 하단 탭바 네비게이션
+```css
+/* 60px 고정 높이, 5개 아이콘 */
+.bottom-tab-bar {
+    height: 60px;
+    position: fixed;
+    bottom: 0;
+}
+
+.tab-icon {
+    width: 30px;
+    height: 30px;
+}
 ```
 
 ## 🔧 설정
@@ -71,61 +120,86 @@ npx serve .
 - **모델**: deepseek-v3
 - **응답 형식**: JSON (`{"title": "제목", "content": "내용"}`)
 
-## 🎯 AI 컨텐츠 생성
-
-### 프롬프트 예시
-```
-한글로 아르바이트를 하면서 겪는 에피소드에 대한 커뮤니티 글을 써줘. 
-주제는 아르바이트에서의 비밀연애, 짝사랑, 진상손님, 악덕사장님 등의 내용을 자유롭게 작성해줘. 
-제목과 내용을 포함해서 작성해줘. 일상 커뮤니티처럼 반말로 써줘.
-```
-
-### 키워드 시스템
-- **주제**: 일상, 음식, 여행, 취미, 운동, 독서 등
-- **톤**: 재미있는, 따뜻한, 진지한, 가벼운
-- **스타일**: 정보성, 상호작용, 경험공유
-
 ## 📊 데이터 구조
 
 ### Firestore 컬렉션
-- `posts` - 게시글 데이터
-- `bot_config` - 봇 설정
-- `bot_logs` - 봇 활동 로그
-- `deepseek_config` - API 설정
-- `deepseek_usage` - API 사용량
-- `deepseek_logs` - API 호출 로그
+```javascript
+// posts 컬렉션
+{
+  id: "document_id",
+  title: "글 제목",
+  content: "글 내용",
+  author: "Ẩn danh",
+  date: "2024-08-02T...",
+  likes: 0,
+  liked: false,
+  comments: [
+    {
+      id: "comment_id",
+      content: "댓글 내용",
+      date: "2024-08-02T...",
+      likes: 0,
+      liked: false
+    }
+  ]
+}
+```
 
-## 🛠️ 기술 스택
+## 🎨 디자인 시스템
 
-- **Frontend**: HTML5, CSS3, Vanilla JavaScript
-- **Backend**: Firebase Firestore
-- **AI**: DeepSeek API
-- **Analytics**: Google Analytics
+### 컬러 팔레트
+- **브랜드 컬러**: `#FFAB02` (주황색)
+- **배경색**: `#ffffff` (흰색)
+- **텍스트**: `#333` (진한 회색)
+- **테두리**: `#eee` (연한 회색)
 
-## 🔄 백업 시스템
+### 반응형 레이아웃
+- **모바일 퍼스트** 디자인
+- **50px 헤더** (모든 페이지 통일)
+- **60px 하단 탭바** (홈에서만 표시)
+- **적응형 여백** (탭바/헤더 고려)
 
-DeepSeek API 실패 시 자동으로 기본 템플릿 시스템으로 전환:
-- 프롬프트 키워드 분석
-- 주제별 템플릿 매칭
-- 랜덤 컨텐츠 생성
+## 🔄 SPA 라우팅
 
-## 🎨 디자인 특징
+### Vercel 설정
+```json
+{
+  "rewrites": [
+    {
+      "source": "/((?!.*\\.(png|jpg|jpeg|gif|svg|ico|css|js|json|txt|xml|woff|woff2|ttf|eot)).*)",
+      "destination": "/index.html"
+    }
+  ]
+}
+```
 
-- **포인트 컬러**: `#FFAB02` (주황색)
-- **프로필 아바타**: 짙은 회색 배경 (`#4a4a4a`)
-- **반응형 디자인**: 모바일/데스크톱 모두 지원
-- **모바일 앱 스타일**: 네이티브 앱과 유사한 UX
+### JavaScript 라우터
+```javascript
+class Router {
+  routes = {
+    '/': () => this.showHomePage(),
+    '/write': () => this.showWritePage(),
+    '/post/:id': (id) => this.showPostPage(id)
+  }
+}
+```
 
-## 🔒 보안
+## 📱 모바일 최적화
 
-- 관리자 페이지는 비밀번호로 보호
-- 세션 기반 로그인 유지 (24시간)
-- API 키는 Firebase에 암호화 저장
-- XSS 방지를 위한 기본적인 입력 검증
+### 터치 인터페이스
+- **36px 최소 터치 영역** (헤더 버튼)
+- **플로팅 액션 버튼** (글 작성)
+- **고정 댓글 입력창** (글 상세)
+- **스와이프 친화적** 네비게이션
+
+### 성능 최적화
+- **이미지 최적화** (30x30px 아이콘)
+- **CSS 애니메이션** (부드러운 전환)
+- **지연 로딩** (Firebase 대기)
 
 ## 🚀 배포 방법
 
-### 1. Vercel로 배포 (추천)
+### 1. Vercel로 배포 (현재 방식)
 ```bash
 # Vercel CLI 설치
 npm i -g vercel
@@ -133,76 +207,90 @@ npm i -g vercel
 # 프로젝트 디렉토리에서 배포
 vercel
 
-# 커스텀 도메인 설정 (선택사항)
+# 프로덕션 배포
 vercel --prod
 ```
 
-### 2. GitHub Pages로 배포
-1. GitHub 리포지토리 생성
-2. 모든 파일을 리포지토리에 푸시
-3. Settings > Pages에서 소스를 main branch로 설정
-4. 배포된 URL 확인
-
-### 3. Netlify로 배포
-1. [Netlify](https://netlify.com)에 로그인
-2. "New site from Git" 선택
-3. 리포지토리 연결
-4. 자동 배포 완료
+### 2. 환경 설정
+1. Firebase 프로젝트 설정
+2. `firebase-config.js` 설정 정보 입력
+3. DeepSeek API 키 설정
+4. `vercel.json` SPA 설정 확인
 
 ## 📝 개발 로그
 
-### v2.0 (현재)
+### v3.0 (2024-08-02) - 베트남 현지화 & UI 개선
+- ✅ 베트남 시간대 및 언어 현지화
+- ✅ 개별 글 URL 라우팅 시스템 구현
+- ✅ 하단 탭바 네비게이션 (5개 아이콘)
+- ✅ 50px 통일 헤더 디자인
+- ✅ 댓글 좋아요 기능 구현
+- ✅ 공유 기능 개선 (Facebook, 링크복사)
+- ✅ Vercel SPA 라우팅 최적화
+- ✅ UI/UX 대폭 개선
+
+### v2.0 (이전)
 - ✅ DeepSeek API 연동 완료
 - ✅ 관리자 패널 API 설정 탭 추가
 - ✅ 사용량 모니터링 시스템 구현
-- ✅ 에러 핸들링 및 백업 시스템 강화
 - ✅ Firebase 실시간 데이터베이스 연동
-- ✅ 세션 기반 로그인 시스템
 
-### v1.0
+### v1.0 (초기)
 - ✅ 기본 커뮤니티 기능 구현
 - ✅ 관리자 패널 기본 기능
 - ✅ 하드코딩된 컨텐츠 템플릿 시스템
-- ✅ 로컬 스토리지 기반 데이터 저장
 
-## 🐛 알려진 이슈
+## 🐛 해결된 이슈
 
-1. **브라우저 캐시 문제**: 파일 업데이트 시 강제 새로고침 필요
-2. **Firebase 권한**: 일부 기능에서 Firestore 권한 오류 발생 가능
-3. **DeepSeek API 연동**: 브라우저 캐시로 인한 스크립트 로딩 이슈
+1. ✅ **관리자 패널 삭제 버그**: 로컬 상태 즉시 업데이트
+2. ✅ **Vercel MIME 타입 오류**: 정규식 패턴 수정
+3. ✅ **글 상세 페이지 로딩**: Firebase 타이밍 최적화
+4. ✅ **댓글 좋아요 누락**: `toggleCommentLike` 함수 구현
+5. ✅ **아이콘 이미지 깨짐**: `vercel.json` 정적 자원 제외
 
 ## 🔮 향후 개발 계획
 
-- [ ] DeepSeek API 연동 최적화
-- [ ] 다중 AI 모델 지원 (OpenAI, Claude 등)
 - [ ] 사용자 인증 시스템
 - [ ] 댓글 알림 기능
 - [ ] 컨텐츠 카테고리 시스템
-- [ ] 모바일 앱 버전
-
-## 📱 브라우저 지원
-
-- Chrome (권장)
-- Safari
-- Firefox
-- Edge
+- [ ] 다크 모드 지원
+- [ ] PWA (Progressive Web App) 변환
+- [ ] 오프라인 지원
 
 ## 🚀 빠른 시작
 
-1. 모든 파일을 웹 서버에 업로드
-2. Firebase 프로젝트 설정 완료
-3. DeepSeek API 키 발급 및 설정
-4. `index.html`을 메인 페이지로 설정
-5. `admin.html`로 관리자 페이지 접근
-6. 비밀번호 `viecoday12#$`로 로그인
+1. **리포지토리 클론**
+```bash
+git clone [repository-url]
+cd viecoday_story
+```
+
+2. **Firebase 설정**
+   - Firebase Console에서 프로젝트 생성
+   - Firestore Database 활성화
+   - `firebase-config.js` 설정
+
+3. **로컬 실행**
+```bash
+npx serve .
+# 또는
+python -m http.server 8000
+```
+
+4. **배포**
+```bash
+vercel
+```
 
 ---
 
-💡 **팁**: 로컬에서 테스트할 때는 Live Server 확장 프로그램을 사용하세요!
+💡 **베트남 사용자를 위한 완전 현지화된 커뮤니티 플랫폼**
 
-## 👥 기여
+🌏 **다국어 지원**: 베트남어 UI, 베트남 시간대, 현지 문화 고려
 
-이 프로젝트는 개인 프로젝트입니다. 문제 발견 시 이슈를 제기해 주세요.
+📱 **모바일 최적화**: 네이티브 앱과 같은 사용 경험
+
+---
 
 ## 📄 라이센스
 

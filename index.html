@@ -1,47 +1,53 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Viecoday Story</title>
+    <meta name="description" content="Cộng đồng Viecoday Story - Nền tảng chia sẻ câu chuyện của người Việt">
+    <meta name="keywords" content="cộng đồng, Việt Nam, chia sẻ, câu chuyện">
+    <title>Viecoday Story - Cộng đồng Việt Nam</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="icons/home_icon.png">
 </head>
 <body>
+    <!-- ===== 홈 페이지 (게시글 목록) ===== -->
     <div class="container">
         <!-- 홈 페이지 헤더 -->
-        <div class="page-header home-header">
+        <header class="page-header home-header">
             <h2>Viecoday Story</h2>
-        </div>
+        </header>
+        
+        <!-- 메인 콘텐츠 -->
         <main>
             <section class="posts-container">
-                <div id="posts"></div>
+                <div id="posts" role="feed" aria-label="Danh sách bài viết"></div>
             </section>
         </main>
 
-        <!-- 플로팅 버튼 -->
-        <div class="floating-btn" id="floatingBtn">
+        <!-- 플로팅 액션 버튼 (글 작성) -->
+        <button class="floating-btn" id="floatingBtn" aria-label="Viết bài mới">
             <span>+</span>
-        </div>
+        </button>
     </div>
 
-    <!-- 하단 탭바 -->
-    <div class="bottom-tab-bar">
-        <div class="tab-item" onclick="window.location.href='https://www.viecoday.com/'">
-            <img src="icons/home_icon.png" alt="홈" class="tab-icon">
-        </div>
-        <div class="tab-item" onclick="window.location.href='https://www.viecoday.com/brand'">
-            <img src="icons/brand_icon.png" alt="브랜드관" class="tab-icon">
-        </div>
-        <div class="tab-item" onclick="window.location.href='https://www.viecoday.com/favorite'">
-            <img src="icons/like_icon.png" alt="좋아요목록" class="tab-icon">
-        </div>
-        <div class="tab-item" onclick="window.location.href='https://viecoday-story.vercel.app/'">
-            <img src="icons/community_icon.png" alt="커뮤니티" class="tab-icon">
-        </div>
-        <div class="tab-item" onclick="window.location.href='https://www.viecoday.com/mypage'">
-            <img src="icons/mymenu_icon.png" alt="마이메뉴" class="tab-icon">
-        </div>
-    </div>
+    <!-- ===== 하단 네비게이션 탭바 ===== -->
+    <nav class="bottom-tab-bar" role="navigation" aria-label="Menu chính">
+        <button class="tab-item" onclick="window.location.href='https://www.viecoday.com/'" aria-label="Trang chủ">
+            <img src="icons/home_icon.png" alt="Trang chủ" class="tab-icon">
+        </button>
+        <button class="tab-item" onclick="window.location.href='https://www.viecoday.com/brand'" aria-label="Thương hiệu">
+            <img src="icons/brand_icon.png" alt="Thương hiệu" class="tab-icon">
+        </button>
+        <button class="tab-item" onclick="window.location.href='https://www.viecoday.com/favorite'" aria-label="Yêu thích">
+            <img src="icons/like_icon.png" alt="Yêu thích" class="tab-icon">
+        </button>
+        <button class="tab-item" onclick="window.location.href='https://viecoday-story.vercel.app/'" aria-label="Cộng đồng" class="active">
+            <img src="icons/community_icon.png" alt="Cộng đồng" class="tab-icon">
+        </button>
+        <button class="tab-item" onclick="window.location.href='https://www.viecoday.com/mypage'" aria-label="Menu cá nhân">
+            <img src="icons/mymenu_icon.png" alt="Menu cá nhân" class="tab-icon">
+        </button>
+    </nav>
 
     <!-- 글 작성 페이지 -->
     <div id="writePage" class="page" style="display: none;">

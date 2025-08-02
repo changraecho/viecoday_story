@@ -1,3 +1,9 @@
+/**
+ * Viecoday Story - 베트남 커뮤니티 플랫폼 스타일시트
+ * 모바일 퍼스트, 50px 헤더, 60px 하단 탭바 설계
+ */
+
+/* ===== 기본 리셋 및 설정 ===== */
 * {
     margin: 0;
     padding: 0;
@@ -10,6 +16,7 @@
     100% { transform: rotate(360deg); }
 }
 
+/* 기본 body 스타일 */
 body {
     font-family: 'Arial', sans-serif;
     background-color: #ffffff;
@@ -17,6 +24,7 @@ body {
     line-height: 1.6;
 }
 
+/* ===== 레이아웃 컨테이너 ===== */
 .container {
     max-width: 800px;
     margin: 0 auto;

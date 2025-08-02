@@ -1,16 +1,24 @@
-// Firebase 연동 스크립트
-let posts = [];
-let postIdCounter = 1;
-let currentPage = 'home';
-let currentPostId = null;
+/**
+ * Viecoday Story - Firebase 연동 및 SPA 라우팅 스크립트
+ * 베트남 커뮤니티 플랫폼을 위한 메인 애플리케이션 로직
+ */
 
-// URL 라우팅 관리
+// 전역 상태 변수
+let posts = []; // Firebase에서 로드된 게시글 배열
+let postIdCounter = 1; // 게시글 ID 카운터 (사용 안 함, Firebase 자동 ID 사용)
+let currentPage = 'home'; // 현재 페이지 상태 ('home', 'write', 'detail')
+let currentPostId = null; // 현재 보고 있는 게시글 ID
+
+/**
+ * SPA 라우팅 관리 클래스
+ * URL 변경 없이 페이지 전환을 처리하고 개별 글 URL 지원
+ */
 class Router {
     constructor() {
         this.routes = {
-            '/': () => this.showHomePage(),
-            '/write': () => this.showWritePage(),
-            '/post/:id': (id) => this.showPostPage(id)
+            '/': () => this.showHomePage(), // 홈페이지 (게시글 목록)
+            '/write': () => this.showWritePage(), // 글 작성 페이지  
+            '/post/:id': (id) => this.showPostPage(id) // 개별 글 상세 페이지
         };
         this.init();
     }

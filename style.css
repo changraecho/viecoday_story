@@ -536,6 +536,60 @@ body {
     background: #555;
 }
 
+/* 하단 탭바 */
+.bottom-tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: white;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    z-index: 1000;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 15px 0;
+    flex: 1;
+}
+
+.tab-item:hover {
+    background: #f8f9fa;
+}
+
+.tab-icon {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+}
+
+/* 하단 탭바로 인한 콘텐츠 여백 조정 */
+.posts-container {
+    padding: 0;
+    margin-bottom: 140px; /* 하단 탭바(60px) + 기존 여백(80px) */
+}
+
+/* 댓글 입력창 위치 조정 */
+.comment-input-fixed {
+    bottom: 60px; /* 하단 탭바 위에 위치 */
+}
+
+/* 플로팅 버튼 위치 조정 */
+.floating-btn {
+    bottom: 80px; /* 하단 탭바 위에 위치 */
+    right: 20px;
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 0;
@@ -550,7 +604,7 @@ body {
     }
     
     .floating-btn {
-        bottom: 20px;
+        bottom: 80px;
         right: 20px;
     }
 }

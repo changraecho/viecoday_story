@@ -57,6 +57,10 @@ class Router {
         document.querySelector('.container').style.display = 'block';
         document.getElementById('floatingBtn').style.display = 'flex';
         
+        // 하단 탭바 표시
+        const bottomTabBar = document.querySelector('.bottom-tab-bar');
+        if (bottomTabBar) bottomTabBar.style.display = 'flex';
+        
         // URL 업데이트
         if (window.location.pathname !== '/') {
             window.history.replaceState({}, '', '/');
@@ -76,6 +80,10 @@ class Router {
         document.querySelector('.container').style.display = 'none';
         document.getElementById('floatingBtn').style.display = 'none';
         
+        // 하단 탭바 숨기기
+        const bottomTabBar = document.querySelector('.bottom-tab-bar');
+        if (bottomTabBar) bottomTabBar.style.display = 'none';
+        
         // 입력 필드 초기화
         document.getElementById('postTitle').value = '';
         document.getElementById('postContent').value = '';
@@ -94,6 +102,10 @@ class Router {
         document.getElementById('detailPage').style.display = 'flex';
         document.querySelector('.container').style.display = 'none';
         document.getElementById('floatingBtn').style.display = 'none';
+        
+        // 하단 탭바 숨기기
+        const bottomTabBar = document.querySelector('.bottom-tab-bar');
+        if (bottomTabBar) bottomTabBar.style.display = 'none';
         
         console.log('글 상세 페이지 진입:', postId, 'posts 배열 길이:', posts.length);
         

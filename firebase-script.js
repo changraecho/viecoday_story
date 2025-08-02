@@ -273,6 +273,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     const submitBtn = document.getElementById('submitBtn');
     const modal = document.getElementById('shareModal');
     const closeModal = document.querySelector('.close');
+    const detailHeaderShareBtn = document.getElementById('detailHeaderShareBtn');
 
     // 플로팅 버튼 클릭 - 글 작성 페이지로 이동
     floatingBtn.addEventListener('click', function() {
@@ -286,6 +287,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     detailBackBtn.addEventListener('click', function() {
         router.navigateTo('/');
+    });
+
+    // 글 상세 페이지 헤더 공유 버튼
+    detailHeaderShareBtn.addEventListener('click', function() {
+        if (currentPostId) {
+            openShareModal(currentPostId);
+        }
     });
 
     // 글 작성 완료 버튼

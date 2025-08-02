@@ -211,7 +211,7 @@ body {
     color: #333;
 }
 
-.submit-btn, .menu-btn {
+.submit-btn, .menu-btn, .share-btn {
     background: none;
     border: none;
     color: #FFAB02;
@@ -219,6 +219,18 @@ body {
     cursor: pointer;
     font-weight: bold;
     padding: 8px;
+}
+
+.share-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #333;
+    transition: color 0.2s;
+}
+
+.share-btn:hover {
+    color: #FFAB02;
 }
 
 .submit-btn:hover, .menu-btn:hover {

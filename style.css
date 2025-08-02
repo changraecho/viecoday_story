@@ -499,7 +499,8 @@ body {
 
 .modal-content {
     background-color: white;
-    margin: 15% auto;
+    margin: 50% auto;
+    transform: translateY(-50%);
     padding: 20px;
     border-radius: 10px;
     width: 90%;
@@ -546,18 +547,10 @@ body {
 }
 
 .share-buttons button:nth-child(2) {
-    background: #0068FF; /* Zalo 파란색 */
-}
-
-.share-buttons button:nth-child(2):hover {
-    background: #005ce6;
-}
-
-.share-buttons button:nth-child(3) {
     background: #666; /* 링크 복사 회색 */
 }
 
-.share-buttons button:nth-child(3):hover {
+.share-buttons button:nth-child(2):hover {
     background: #555;
 }
 
